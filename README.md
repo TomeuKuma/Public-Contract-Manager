@@ -1,73 +1,80 @@
-# Welcome to your Lovable project
+# Gestor de Contratos Públicos (IMAS)
 
-## Project info
+Este proyecto es una aplicación web moderna diseñada para optimizar la gestión y el seguimiento de los contratos públicos. Su objetivo principal es proporcionar una herramienta eficiente para administrar expedientes, visualizar detalles financieros y operativos, y mantener un control riguroso sobre la información contractual.
 
-**URL**: https://lovable.dev/projects/1b8b5034-6ea9-48d6-a2cd-d272e1a74d34
+## 🎯 Finalidad del Proyecto
 
-## How can I edit this code?
+La aplicación busca centralizar la información de los contratos, facilitando a los gestores la toma de decisiones y el seguimiento administrativo. Permite:
+- **Digitalizar la gestión** de expedientes de contratación.
+- **Mejorar la transparencia** y el acceso a la información de los contratos.
+- **Agilizar los procesos** de alta y consulta de expedientes.
 
-There are several ways of editing your application.
+## 🚀 Características Principales
 
-**Use Lovable**
+- **Autenticación Segura**: Sistema de login para proteger el acceso a la información sensible.
+- **Dashboard Interactivo**: Vista general con métricas y listados de contratos activos.
+- **Gestión de Contratos**:
+  - Creación de nuevos contratos con validación de datos.
+  - Visualización detallada de cada expediente (importes, fechas, adjudicatarios).
+  - Edición y actualización de la información contractual.
+- **Interfaz Moderna**: Diseño limpio y responsivo para una mejor experiencia de usuario.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/1b8b5034-6ea9-48d6-a2cd-d272e1a74d34) and start prompting.
+## 🛠️ Stack Tecnológico
 
-Changes made via Lovable will be committed automatically to this repo.
+El proyecto está construido utilizando tecnologías modernas de desarrollo web para asegurar rendimiento, escalabilidad y mantenibilidad:
 
-**Use your preferred IDE**
+- **Frontend Core**:
+  - [React](https://react.dev/) - Biblioteca para construir interfaces de usuario.
+  - [Vite](https://vitejs.dev/) - Entorno de desarrollo y empaquetador rápido.
+  - [TypeScript](https://www.typescriptlang.org/) - Tipado estático para un código más robusto.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **UI & Estilos**:
+  - [Tailwind CSS](https://tailwindcss.com/) - Framework de utilidades CSS.
+  - [Shadcn UI](https://ui.shadcn.com/) - Componentes de interfaz reutilizables y accesibles.
+  - [Lucide React](https://lucide.dev/) - Iconos vectoriales ligeros.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- **Gestión de Estado y Datos**:
+  - [TanStack Query](https://tanstack.com/query/latest) - Gestión de estado asíncrono y caché de datos.
+  - [Supabase](https://supabase.com/) - Backend as a Service (Base de datos, Autenticación).
 
-Follow these steps:
+- **Formularios y Validación**:
+  - [React Hook Form](https://react-hook-form.com/) - Manejo eficiente de formularios.
+  - [Zod](https://zod.dev/) - Validación de esquemas de datos.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 🏁 Comenzando
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+Sigue estos pasos para ejecutar el proyecto en tu entorno local:
 
-# Step 3: Install the necessary dependencies.
-npm i
+### Prerrequisitos
+- Node.js (versión 18 o superior recomendada)
+- npm o yarn
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+### Instalación
 
-**Edit a file directly in GitHub**
+1.  **Clonar el repositorio**:
+    ```bash
+    git clone <url-del-repositorio>
+    cd expense-manager-imas-main
+    ```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+2.  **Instalar dependencias**:
+    ```bash
+    npm install
+    ```
 
-**Use GitHub Codespaces**
+3.  **Configurar variables de entorno**:
+    Crea un archivo `.env` en la raíz del proyecto y añade las credenciales necesarias (por ejemplo, conexión a Supabase).
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+4.  **Ejecutar el servidor de desarrollo**:
+    ```bash
+    npm run dev
+    ```
 
-## What technologies are used for this project?
+La aplicación estará disponible en `http://localhost:8080` (o el puerto que indique la consola).
 
-This project is built with:
+## 📄 Scripts Disponibles
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/1b8b5034-6ea9-48d6-a2cd-d272e1a74d34) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- `npm run dev`: Inicia el servidor de desarrollo.
+- `npm run build`: Construye la aplicación para producción.
+- `npm run lint`: Ejecuta el linter para verificar la calidad del código.
+- `npm run preview`: Vista previa de la build de producción.
