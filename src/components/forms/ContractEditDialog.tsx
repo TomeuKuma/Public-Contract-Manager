@@ -24,10 +24,19 @@ const INSTRUCTORS = [
 ];
 
 const CONTRACTING_BODIES = [
-  "UFAG Residència Llar dels Ancians", "UFAG Residència La Bonanova",
-  "UFAG Residència Mare Nostrum", "UFAG Residència Reina Sofia",
-  "UFAG Centre de dia Reina Sofia", "UFAG Centre de dia Can Clar",
-  "UFAG Centre de dia La Vileta", "UFAG SAM", "Gerència"
+  "UFAG Residència Llar dels Ancians",
+  "UFAG Residència La Bonanova",
+  "UFAG Residència Bartomeu Quetglas",
+  "UFAG Residència Huialfàs",
+  "UFAG Residència Oms-Sant Miquel",
+  "UFAG Residència Miquel Mir",
+  "UFAG Residència Sant Josep",
+  "UFAG Residència Son Caulelles",
+  "UFAG Direcció de les llars del menor",
+  "UFAG Coordinació dels centres d'inclusió social",
+  "Presidència",
+  "Vicepresidència",
+  "Gerència",
 ];
 
 const AWARD_PROCEDURES = ["Contracte obert", "Contracte menor AD", "Contracte menor ADO"];

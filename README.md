@@ -1,6 +1,6 @@
 # Gestor de Contratos Públicos (IMAS)
 
-Este proyecto es una aplicación web moderna diseñada para optimizar la gestión y el seguimiento de los contratos públicos. Su objetivo principal es proporcionar una herramienta eficiente para administrar expedientes, visualizar detalles financieros y operativos, y mantener un control riguroso sobre la información contractual.
+Este proyecto es una aplicación web moderna diseñada para optimizar la gestión y el seguimiento de los contratos públicos de las Administraciones. Su objetivo principal es proporcionar una herramienta eficiente para administrar expedientes, visualizar detalles financieros y operativos, y mantener un control riguroso sobre la información contractual.
 
 ## 🎯 Finalidad del Proyecto
 
@@ -53,7 +53,7 @@ Sigue estos pasos para ejecutar el proyecto en tu entorno local:
 
 1.  **Clonar el repositorio**:
     ```bash
-    git clone <url-del-repositorio>
+    git clone https://github.com/TomeuKuma/Public-Contract-Manager
     cd expense-manager-imas-main
     ```
 

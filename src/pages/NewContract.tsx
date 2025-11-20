@@ -40,6 +40,9 @@ const CONTRACTING_BODY_OPTIONS = [
   "UFAG Residència Miquel Mir",
   "UFAG Residència Sant Josep",
   "UFAG Residència Son Caulelles",
+  "UFAG Direcció de les llars del menor",
+  "UFAG Coordinació dels centres d'inclusió social",
+  "Presidència",
   "Vicepresidència",
   "Gerència",
 ];
