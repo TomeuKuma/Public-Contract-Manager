@@ -8,24 +8,38 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
+import { Invoice } from "@/types";
+
 interface InvoiceFormDialogProps {
   creditId: string;
-  invoice?: any;
+  invoice?: Invoice | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   availableCenters: { id: string; name: string }[];
 }
 
+interface InvoiceFormData {
+  invoice_number: string;
+  invoice_date: string;
+  base_amount: string;
+  vat_amount: string;
+  center_id: string;
+}
+
 export const InvoiceFormDialog = ({ creditId, invoice, open, onOpenChange, onSuccess, availableCenters }: InvoiceFormDialogProps) => {
   const { toast } = useToast();
-  const { register, handleSubmit, reset } = useForm({
-    defaultValues: invoice || {}
+  const { register, handleSubmit, reset } = useForm<InvoiceFormData>({
+    defaultValues: invoice ? {
+      ...invoice,
+      base_amount: invoice.base_amount.toString(),
+      vat_amount: invoice.vat_amount.toString(),
+    } : {}
   });
   const [loading, setLoading] = useState(false);
   const isEdit = !!invoice;
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: InvoiceFormData) => {
     setLoading(true);
     try {
       const invoiceData = {

@@ -8,28 +8,62 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 
+import { Credit } from "@/types";
+
 interface CreditFormDialogProps {
   lotId: string;
-  credit?: any;
+  credit?: Credit | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   modifiable?: boolean;
 }
 
+interface CreditFormData {
+  any: string;
+  organic_item: string;
+  program_item: string;
+  economic_item: string;
+  credit_committed_d: string;
+  credit_recognized_o: string;
+  credit_real: string;
+  modificacio_credit: string;
+  projecte_inversio: boolean;
+  codi_projecte_inversio: string;
+  accounting_document_number: string;
+  percentage_modified: number;
+}
+
 export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess, modifiable = false }: CreditFormDialogProps) => {
   const { toast } = useToast();
-  const { register, handleSubmit, reset, watch, setValue } = useForm({
+  const { register, handleSubmit, reset, watch, setValue } = useForm<CreditFormData>({
     defaultValues: credit ? {
       ...credit,
-      modificacio_credit: credit.modificacio_credit || 0,
-      percentage_modified: credit.percentage_modified || 0
+      any: credit.any.toString(),
+      credit_committed_d: credit.credit_committed_d.toString(),
+      credit_recognized_o: credit.credit_recognized_o.toString(),
+      credit_real: credit.credit_real.toString(),
+      modificacio_credit: credit.modificacio_credit.toString(),
+      percentage_modified: credit.percentage_modified || 0,
+      projecte_inversio: credit.projecte_inversio,
+      codi_projecte_inversio: credit.codi_projecte_inversio || "",
+      accounting_document_number: credit.accounting_document_number || "",
+      organic_item: credit.organic_item,
+      program_item: credit.program_item,
+      economic_item: credit.economic_item,
     } : {
-      any: new Date().getFullYear(),
-      modificacio_credit: 0,
+      any: new Date().getFullYear().toString(),
+      modificacio_credit: "0",
       percentage_modified: 0,
       projecte_inversio: false,
-      codi_projecte_inversio: ""
+      codi_projecte_inversio: "",
+      credit_committed_d: "0",
+      credit_recognized_o: "0",
+      credit_real: "0",
+      organic_item: "",
+      program_item: "",
+      economic_item: "",
+      accounting_document_number: ""
     }
   });
   const [loading, setLoading] = useState(false);
@@ -41,17 +75,17 @@ export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess,
   const isInvestmentProject = watch("projecte_inversio");
 
   useEffect(() => {
-    const committed = parseFloat(creditCommitted) || 0;
-    const recognized = parseFloat(creditRecognized) || 0;
-    const mod = parseFloat(modification) || 0;
+    const committed = typeof creditCommitted === 'string' ? parseFloat(creditCommitted) : (creditCommitted || 0);
+    const recognized = typeof creditRecognized === 'string' ? parseFloat(creditRecognized) : (creditRecognized || 0);
+    const mod = typeof modification === 'string' ? parseFloat(modification) : (modification || 0);
 
     // Calculate Percentage
     if (modifiable) {
       if (committed !== 0) {
         const percentage = (mod / committed) * 100;
-        setValue("percentage_modified", percentage.toFixed(2));
+        setValue("percentage_modified", Number(percentage.toFixed(2)));
       } else {
-        setValue("percentage_modified", "0.00");
+        setValue("percentage_modified", 0);
       }
     }
 
@@ -60,11 +94,11 @@ export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess,
     // If not modifiable, modification is ignored (treated as 0)
     const effectiveModification = modifiable ? mod : 0;
     const real = (committed + effectiveModification) - recognized;
-    setValue("credit_real", real.toFixed(2));
+    setValue("credit_real", Number(real.toFixed(2)).toString());
 
   }, [creditCommitted, creditRecognized, modification, modifiable, setValue]);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: CreditFormData) => {
     setLoading(true);
     try {
       const creditData = {
@@ -76,7 +110,7 @@ export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess,
         credit_committed_d: parseFloat(data.credit_committed_d) || 0,
         credit_recognized_o: parseFloat(data.credit_recognized_o) || 0,
         credit_real: parseFloat(data.credit_real) || 0,
-        percentage_modified: modifiable ? (parseFloat(data.percentage_modified) || 0) : 0,
+        percentage_modified: modifiable ? (parseFloat(data.percentage_modified.toString()) || 0) : 0,
         modificacio_credit: modifiable ? (parseFloat(data.modificacio_credit) || 0) : 0,
         accounting_document_number: data.accounting_document_number || null,
         projecte_inversio: data.projecte_inversio || false,

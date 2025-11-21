@@ -8,18 +8,34 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
+import { Lot } from "@/types";
+
 interface LotFormDialogProps {
   contractId: string;
-  lot?: any;
+  lot?: Lot | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   extendable?: boolean;
 }
 
+interface LotFormData {
+  name: string;
+  awardee: string;
+  email_adjudicatari: string;
+  cif_nif: string;
+  start_date: string;
+  end_date: string;
+  cpv: string;
+  extension_start_date: string;
+  extension_end_date: string;
+  extension_communication_deadline: string;
+  observations: string;
+}
+
 export const LotFormDialog = ({ contractId, lot, open, onOpenChange, onSuccess, extendable = false }: LotFormDialogProps) => {
   const { toast } = useToast();
-  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<LotFormData>({
     defaultValues: lot || {}
   });
   const [loading, setLoading] = useState(false);
@@ -29,7 +45,7 @@ export const LotFormDialog = ({ contractId, lot, open, onOpenChange, onSuccess, 
   const endDate = watch("end_date");
   const extensionStartDate = watch("extension_start_date");
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: LotFormData) => {
     setLoading(true);
     try {
       const lotData = {

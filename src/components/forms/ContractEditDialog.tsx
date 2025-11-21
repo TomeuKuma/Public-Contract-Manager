@@ -9,34 +9,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { Contract } from "@/types";
+import { CONTRACTING_BODIES, AWARD_PROCEDURES, CONTRACT_TYPES } from "@/lib/constants";
 
 interface ContractEditDialogProps {
-  contract: any;
+  contract: Contract;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }
-
-
-
-const CONTRACTING_BODIES = [
-  "UFAG Residència Llar dels Ancians",
-  "UFAG Residència La Bonanova",
-  "UFAG Residència Bartomeu Quetglas",
-  "UFAG Residència Huialfàs",
-  "UFAG Residència Oms-Sant Miquel",
-  "UFAG Residència Miquel Mir",
-  "UFAG Residència Sant Josep",
-  "UFAG Residència Son Caulelles",
-  "UFAG Direcció de les llars del menor",
-  "UFAG Coordinació dels centres d'inclusió social",
-  "Presidència",
-  "Vicepresidència",
-  "Gerència",
-];
-
-const AWARD_PROCEDURES = ["Contracte obert", "Contracte menor AD", "Contracte menor ADO"];
-const CONTRACT_TYPES = ["Subministrament", "Servei", "Obra", "Concessió"];
 
 export const ContractEditDialog = ({ contract, open, onOpenChange, onSuccess }: ContractEditDialogProps) => {
   const { toast } = useToast();
@@ -55,6 +36,13 @@ export const ContractEditDialog = ({ contract, open, onOpenChange, onSuccess }: 
   const [warningOpen, setWarningOpen] = useState(false);
   const [pendingUncheck, setPendingUncheck] = useState<"extendable" | "modifiable" | null>(null);
   const [duplicateFileNumberError, setDuplicateFileNumberError] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      fetchAreasAndCenters();
+      fetchContractAssociations();
+    }
+  }, [open]);
 
   const fetchAreasAndCenters = async () => {
     const { data: areasData } = await supabase.from("areas").select("*");
@@ -84,11 +72,11 @@ export const ContractEditDialog = ({ contract, open, onOpenChange, onSuccess }: 
       if (field === "extendable") {
         hasData = contract.lots?.some((lot: any) =>
           lot.extension_start_date || lot.extension_end_date || lot.extension_communication_deadline
-        );
+        ) || false;
       } else if (field === "modifiable") {
         hasData = contract.lots?.some((lot: any) =>
           lot.credits?.some((credit: any) => credit.modificacio_credit && credit.modificacio_credit !== 0)
-        );
+        ) || false;
       }
 
       if (hasData) {

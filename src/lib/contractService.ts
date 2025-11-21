@@ -100,7 +100,10 @@ export const getContractById = async (id: string) => {
           *,
           credits(
             *,
-            invoices(*)
+            invoices(
+              *,
+              centers(name)
+            )
           )
         )
       `)
@@ -109,7 +112,29 @@ export const getContractById = async (id: string) => {
 
     if (error) throw error;
 
-    return { data, error: null };
+    // Transform data to match Contract interface
+    const transformedData = {
+      ...data,
+      areas: data.contract_areas?.map((ca: any) => ca.area?.name) || [],
+      centers: data.contract_centers?.map((cc: any) => cc.center?.name) || [],
+      centers_data: data.contract_centers?.map((cc: any) => cc.center) || [],
+      lots: data.lots?.map((lot: any) => ({
+        ...lot,
+        credit_real_total: lot.credits?.reduce(
+          (sum: number, credit: any) => sum + (Number(credit.credit_real) || 0),
+          0
+        ),
+        credits: lot.credits?.map((credit: any) => ({
+          ...credit,
+          invoices: credit.invoices?.map((invoice: any) => ({
+            ...invoice,
+            centers: invoice.centers // Keep as object/array as returned by Supabase, type definition handles it
+          }))
+        }))
+      }))
+    };
+
+    return { data: transformedData, error: null };
   } catch (error: any) {
     console.error("Error in getContractById:", error);
     return { data: null, error: error.message };
