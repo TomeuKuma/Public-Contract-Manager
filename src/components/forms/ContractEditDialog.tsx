@@ -54,11 +54,7 @@ export const ContractEditDialog = ({ contract, open, onOpenChange, onSuccess }: 
 
   const [warningOpen, setWarningOpen] = useState(false);
   const [pendingUncheck, setPendingUncheck] = useState<"extendable" | "modifiable" | null>(null);
-
-  useEffect(() => {
-    fetchAreasAndCenters();
-    fetchContractAssociations();
-  }, [contract.id]);
+  const [duplicateFileNumberError, setDuplicateFileNumberError] = useState(false);
 
   const fetchAreasAndCenters = async () => {
     const { data: areasData } = await supabase.from("areas").select("*");
@@ -134,10 +130,19 @@ export const ContractEditDialog = ({ contract, open, onOpenChange, onSuccess }: 
           purpose: data.purpose,
           extendable: data.extendable,
           modifiable: data.modifiable,
+          referencia_interna: data.referencia_interna,
         })
         .eq("id", contract.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        // Check for unique constraint violation (code 23505)
+        if (updateError.code === "23505") {
+          setDuplicateFileNumberError(true);
+          setLoading(false);
+          return;
+        }
+        throw updateError;
+      }
 
       // Cleanup if unchecked
       if (!data.extendable && contract.extendable) {
@@ -236,13 +241,31 @@ export const ContractEditDialog = ({ contract, open, onOpenChange, onSuccess }: 
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="file_number">Núm. d'expedient</Label>
-                <Input id="file_number" {...register("file_number")} />
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="file_number">Núm. d'expedient</Label>
+                  {duplicateFileNumberError && (
+                    <span className="text-[10px] text-destructive font-medium leading-tight">
+                      Nº d'expedient existent. Modifica o elimina el contracte duplicat abans de poder crear aquest contracte.
+                    </span>
+                  )}
+                </div>
+                <Input
+                  id="file_number"
+                  {...register("file_number", {
+                    onChange: () => setDuplicateFileNumberError(false)
+                  })}
+                  className={duplicateFileNumberError ? "border-destructive" : ""}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="dossier_number">Núm. de dossier</Label>
                 <Input id="dossier_number" {...register("dossier_number")} />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="referencia_interna">Referència interna</Label>
+              <Input id="referencia_interna" {...register("referencia_interna")} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">

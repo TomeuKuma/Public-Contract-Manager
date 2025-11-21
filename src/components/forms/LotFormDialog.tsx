@@ -44,6 +44,7 @@ export const LotFormDialog = ({ contractId, lot, open, onOpenChange, onSuccess, 
         extension_end_date: extendable ? (data.extension_end_date || null) : null,
         extension_communication_deadline: extendable ? (data.extension_communication_deadline || null) : null,
         observations: data.observations || null,
+        email_adjudicatari: data.email_adjudicatari || null,
       };
 
       if (isEdit) {
@@ -99,6 +100,11 @@ export const LotFormDialog = ({ contractId, lot, open, onOpenChange, onSuccess, 
               <Label htmlFor="cif_nif">CIF/NIF</Label>
               <Input id="cif_nif" {...register("cif_nif")} />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email_adjudicatari">E-mail de l'adjudicatari</Label>
+            <Input id="email_adjudicatari" type="email" {...register("email_adjudicatari")} />
           </div>
 
           <div className="space-y-2">

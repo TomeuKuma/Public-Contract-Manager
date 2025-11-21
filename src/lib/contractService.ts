@@ -160,7 +160,7 @@ export const createContract = async (contractData: any) => {
     return { data: newContract, error: null };
   } catch (error: any) {
     console.error("Error in createContract:", error);
-    return { data: null, error: error.message };
+    return { data: null, error: error };
   }
 };
 

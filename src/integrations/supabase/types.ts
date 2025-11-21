@@ -144,6 +144,7 @@ export type Database = {
           extendable: boolean | null
           file_number: string | null
           id: string
+          referencia_interna: string | null
           instructor_technician: never // Removed
           tipus_necessitat: "Puntual" | "Recurrent" | null
           modifiable: boolean | null
@@ -203,6 +204,8 @@ export type Database = {
           program_item: string | null
           updated_at: string
           any: number
+          projecte_inversio: boolean | null
+          codi_projecte_inversio: string | null
         }
         Insert: {
           accounting_document_number?: string | null
@@ -249,6 +252,7 @@ export type Database = {
       invoices: {
         Row: {
           base_amount: number
+          center_id: string | null
           created_at: string
           credit_id: string
           id: string
@@ -297,6 +301,7 @@ export type Database = {
           contract_id: string
           cpv: string | null
           created_at: string
+          email_adjudicatari: string | null
           end_date: string | null
           extension_communication_deadline: string | null
           extension_end_date: string | null

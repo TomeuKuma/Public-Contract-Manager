@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 
 interface CreditFormDialogProps {
@@ -26,7 +27,9 @@ export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess,
     } : {
       any: new Date().getFullYear(),
       modificacio_credit: 0,
-      percentage_modified: 0
+      percentage_modified: 0,
+      projecte_inversio: false,
+      codi_projecte_inversio: ""
     }
   });
   const [loading, setLoading] = useState(false);
@@ -35,6 +38,7 @@ export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess,
   const creditCommitted = watch("credit_committed_d");
   const creditRecognized = watch("credit_recognized_o");
   const modification = watch("modificacio_credit");
+  const isInvestmentProject = watch("projecte_inversio");
 
   useEffect(() => {
     const committed = parseFloat(creditCommitted) || 0;
@@ -75,6 +79,8 @@ export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess,
         percentage_modified: modifiable ? (parseFloat(data.percentage_modified) || 0) : 0,
         modificacio_credit: modifiable ? (parseFloat(data.modificacio_credit) || 0) : 0,
         accounting_document_number: data.accounting_document_number || null,
+        projecte_inversio: data.projecte_inversio || false,
+        codi_projecte_inversio: data.projecte_inversio ? data.codi_projecte_inversio : null,
       };
 
       if (isEdit) {
@@ -218,6 +224,30 @@ export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess,
                 {...register("credit_real")}
               />
             </div>
+          </div>
+
+          {/* Line 6 - Investment Project */}
+          <div className="space-y-4 border-t pt-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="projecte_inversio"
+                checked={watch("projecte_inversio")}
+                onCheckedChange={(checked) => setValue("projecte_inversio", checked as boolean)}
+              />
+              <label htmlFor="projecte_inversio" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Projecte d'inversió
+              </label>
+            </div>
+
+            {isInvestmentProject && (
+              <div className="space-y-2">
+                <Label htmlFor="codi_projecte_inversio">Codi del projecte d'inversió *</Label>
+                <Input
+                  id="codi_projecte_inversio"
+                  {...register("codi_projecte_inversio", { required: isInvestmentProject })}
+                />
+              </div>
+            )}
           </div>
 
           <DialogFooter>

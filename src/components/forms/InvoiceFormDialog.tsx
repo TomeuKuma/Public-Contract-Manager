@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
@@ -13,9 +14,10 @@ interface InvoiceFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  availableCenters: { id: string; name: string }[];
 }
 
-export const InvoiceFormDialog = ({ creditId, invoice, open, onOpenChange, onSuccess }: InvoiceFormDialogProps) => {
+export const InvoiceFormDialog = ({ creditId, invoice, open, onOpenChange, onSuccess, availableCenters }: InvoiceFormDialogProps) => {
   const { toast } = useToast();
   const { register, handleSubmit, reset } = useForm({
     defaultValues: invoice || {}
@@ -32,6 +34,7 @@ export const InvoiceFormDialog = ({ creditId, invoice, open, onOpenChange, onSuc
         invoice_date: data.invoice_date,
         base_amount: parseFloat(data.base_amount),
         vat_amount: parseFloat(data.vat_amount),
+        center_id: data.center_id || null,
       };
 
       if (isEdit) {
@@ -86,22 +89,41 @@ export const InvoiceFormDialog = ({ creditId, invoice, open, onOpenChange, onSuc
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="base_amount">Import base *</Label>
-              <Input 
-                id="base_amount" 
-                type="number" 
+              <Input
+                id="base_amount"
+                type="number"
                 step="0.01"
-                {...register("base_amount", { required: true })} 
+                {...register("base_amount", { required: true })}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="vat_amount">Import IVA *</Label>
-              <Input 
-                id="vat_amount" 
-                type="number" 
+              <Input
+                id="vat_amount"
+                type="number"
                 step="0.01"
-                {...register("vat_amount", { required: true })} 
+                {...register("vat_amount", { required: true })}
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="center_id">Centre</Label>
+            <Select
+              onValueChange={(value) => register("center_id").onChange({ target: { value, name: "center_id" } })}
+              defaultValue={invoice?.center_id}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona un centre" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableCenters.map((center) => (
+                  <SelectItem key={center.id} value={center.id}>
+                    {center.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <DialogFooter>

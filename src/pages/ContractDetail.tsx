@@ -63,7 +63,10 @@ const ContractDetail = () => {
           *,
           credits(
             *,
-            invoices(*)
+            invoices(
+              *,
+              centers(name)
+            )
           )
         `)
         .eq("contract_id", id);
@@ -80,6 +83,7 @@ const ContractDetail = () => {
         ...contractData,
         areas: areasData?.map((a: any) => a.areas.name) || [],
         centers: centersData?.map((c: any) => c.centers.name) || [],
+        centers_data: centersData?.map((c: any) => ({ id: c.center_id, name: c.centers.name })) || [],
         lots: lotsWithTotals || [],
       });
     } catch (error) {
@@ -190,10 +194,15 @@ const ContractDetail = () => {
     setInvoiceDialogOpen(true);
   };
 
+
+
   const handleEditInvoice = (invoice: any) => {
     setEditingInvoice(invoice);
     setInvoiceDialogOpen(true);
   };
+
+  // Get available centers for the invoice form (from contract centers)
+  const availableCenters = contract?.centers_data || [];
 
   if (loading) {
     return (
@@ -275,6 +284,10 @@ const ContractDetail = () => {
                   "-"
                 )}
               </p>
+            </div>
+            <div>
+              <p className="text-muted-foreground mb-1">Referència interna:</p>
+              <p className="font-medium">{contract.referencia_interna || "-"}</p>
             </div>
             <div>
               <p className="text-muted-foreground mb-1">Tipus de necessitat:</p>
@@ -377,6 +390,11 @@ const ContractDetail = () => {
                             <h4 className="font-semibold">{lot.name}</h4>
                             <p className="text-sm text-muted-foreground">
                               {lot.awardee || "Sense adjudicatari"}
+                              {lot.email_adjudicatari && (
+                                <span className="text-xs text-muted-foreground block">
+                                  {lot.email_adjudicatari}
+                                </span>
+                              )}
                             </p>
                           </div>
                           <div className="text-right">
@@ -454,6 +472,13 @@ const ContractDetail = () => {
                                             <p className="text-muted-foreground">Crèdit real:</p>
                                             <p className="font-medium">{formatCurrency(credit.credit_real)}</p>
                                           </div>
+                                          {credit.projecte_inversio && (
+                                            <div className="col-span-full">
+                                              <Badge variant="secondary" className="mt-1">
+                                                Projecte d'inversió: {credit.codi_projecte_inversio}
+                                              </Badge>
+                                            </div>
+                                          )}
                                         </div>
 
                                         <div className="flex gap-2">
@@ -487,6 +512,11 @@ const ContractDetail = () => {
                                                       <p className="text-muted-foreground">
                                                         {format(new Date(invoice.invoice_date), "dd/MM/yyyy", { locale: ca })}
                                                       </p>
+                                                      {invoice.centers && (
+                                                        <p className="text-muted-foreground text-[10px]">
+                                                          {invoice.centers.name}
+                                                        </p>
+                                                      )}
                                                     </div>
                                                     <div className="text-right">
                                                       <p className="font-semibold">{formatCurrency(invoice.total)}</p>
@@ -572,6 +602,7 @@ const ContractDetail = () => {
             open={invoiceDialogOpen}
             onOpenChange={setInvoiceDialogOpen}
             onSuccess={fetchContractDetail}
+            availableCenters={availableCenters}
           />
         )}
       </div>

@@ -56,7 +56,9 @@ const NewContract = () => {
   const [areas, setAreas] = useState<any[]>([]);
   const [centers, setCenters] = useState<any[]>([]);
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
+
   const [selectedCenters, setSelectedCenters] = useState<string[]>([]);
+  const [duplicateFileNumberError, setDuplicateFileNumberError] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -70,6 +72,7 @@ const NewContract = () => {
     purpose: "",
     extendable: false,
     modifiable: false,
+    referencia_interna: "",
   });
 
   useEffect(() => {
@@ -140,11 +143,16 @@ const NewContract = () => {
     const { data, error } = await createContract(contractData);
 
     if (error) {
-      toast({
-        title: "Error",
-        description: "No s'ha pogut crear el contracte",
-        variant: "destructive",
-      });
+      // Check for unique constraint violation (code 23505)
+      if (error.code === "23505") {
+        setDuplicateFileNumberError(true);
+      } else {
+        toast({
+          title: "Error",
+          description: "No s'ha pogut crear el contracte",
+          variant: "destructive",
+        });
+      }
       setLoading(false);
       return;
     }
@@ -209,15 +217,35 @@ const NewContract = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="file_number">Núm. d'expedient</Label>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="file_number">Núm. d'expedient</Label>
+                    {duplicateFileNumberError && (
+                      <span className="text-[10px] text-destructive font-medium leading-tight">
+                        Nº d'expedient existent. Modifica o elimina el contracte duplicat abans de poder crear aquest contracte.
+                      </span>
+                    )}
+                  </div>
                   <Input
                     id="file_number"
                     value={formData.file_number}
-                    onChange={(e) =>
-                      setFormData({ ...formData, file_number: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setFormData({ ...formData, file_number: e.target.value });
+                      setDuplicateFileNumberError(false);
+                    }}
+                    className={duplicateFileNumberError ? "border-destructive" : ""}
                   />
                 </div>
+              </div>
+
+              <div>
+                <Label htmlFor="referencia_interna">Referència interna</Label>
+                <Input
+                  id="referencia_interna"
+                  value={formData.referencia_interna}
+                  onChange={(e) =>
+                    setFormData({ ...formData, referencia_interna: e.target.value })
+                  }
+                />
               </div>
 
               <div>
