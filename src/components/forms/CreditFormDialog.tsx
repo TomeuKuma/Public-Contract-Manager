@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -13,15 +13,51 @@ interface CreditFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  modifiable?: boolean;
 }
 
-export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess }: CreditFormDialogProps) => {
+export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess, modifiable = false }: CreditFormDialogProps) => {
   const { toast } = useToast();
-  const { register, handleSubmit, reset } = useForm({
-    defaultValues: credit || {}
+  const { register, handleSubmit, reset, watch, setValue } = useForm({
+    defaultValues: credit ? {
+      ...credit,
+      modificacio_credit: credit.modificacio_credit || 0,
+      percentage_modified: credit.percentage_modified || 0
+    } : {
+      modificacio_credit: 0,
+      percentage_modified: 0
+    }
   });
   const [loading, setLoading] = useState(false);
   const isEdit = !!credit;
+
+  const creditCommitted = watch("credit_committed_d");
+  const creditRecognized = watch("credit_recognized_o");
+  const modification = watch("modificacio_credit");
+
+  useEffect(() => {
+    const committed = parseFloat(creditCommitted) || 0;
+    const recognized = parseFloat(creditRecognized) || 0;
+    const mod = parseFloat(modification) || 0;
+
+    // Calculate Percentage
+    if (modifiable) {
+      if (committed !== 0) {
+        const percentage = (mod / committed) * 100;
+        setValue("percentage_modified", percentage.toFixed(2));
+      } else {
+        setValue("percentage_modified", "0.00");
+      }
+    }
+
+    // Calculate Real Credit
+    // Formula: (Committed + Modification) - Recognized
+    // If not modifiable, modification is ignored (treated as 0)
+    const effectiveModification = modifiable ? mod : 0;
+    const real = (committed + effectiveModification) - recognized;
+    setValue("credit_real", real.toFixed(2));
+
+  }, [creditCommitted, creditRecognized, modification, modifiable, setValue]);
 
   const onSubmit = async (data: any) => {
     setLoading(true);
@@ -34,7 +70,8 @@ export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess 
         credit_committed_d: parseFloat(data.credit_committed_d) || 0,
         credit_recognized_o: parseFloat(data.credit_recognized_o) || 0,
         credit_real: parseFloat(data.credit_real) || 0,
-        percentage_modified: parseInt(data.percentage_modified) || 0,
+        percentage_modified: modifiable ? (parseFloat(data.percentage_modified) || 0) : 0,
+        modificacio_credit: modifiable ? (parseFloat(data.modificacio_credit) || 0) : 0,
         accounting_document_number: data.accounting_document_number || null,
       };
 
@@ -72,7 +109,7 @@ export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Editar crèdit" : "Afegir crèdit"}</DialogTitle>
         </DialogHeader>
@@ -92,23 +129,51 @@ export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess 
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className={`grid ${modifiable ? "grid-cols-3" : "grid-cols-2"} gap-4`}>
             <div className="space-y-2">
               <Label htmlFor="credit_committed_d">Crèdit compromès D *</Label>
-              <Input 
-                id="credit_committed_d" 
-                type="number" 
+              <Input
+                id="credit_committed_d"
+                type="number"
                 step="0.01"
-                {...register("credit_committed_d", { required: true })} 
+                {...register("credit_committed_d", { required: true })}
               />
             </div>
+
+            {modifiable && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="modificacio_credit">Modificació de crèdit</Label>
+                  <Input
+                    id="modificacio_credit"
+                    type="number"
+                    step="0.01"
+                    placeholder="0,00 €"
+                    {...register("modificacio_credit")}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="percentage_modified">% Modificat</Label>
+                  <div className="relative">
+                    <Input
+                      id="percentage_modified"
+                      readOnly
+                      className="bg-muted"
+                      {...register("percentage_modified")}
+                    />
+                    <span className="absolute right-3 top-2.5 text-sm text-muted-foreground">%</span>
+                  </div>
+                </div>
+              </>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="credit_recognized_o">Crèdit reconegut O</Label>
-              <Input 
-                id="credit_recognized_o" 
-                type="number" 
+              <Input
+                id="credit_recognized_o"
+                type="number"
                 step="0.01"
-                {...register("credit_recognized_o")} 
+                {...register("credit_recognized_o")}
               />
             </div>
           </div>
@@ -116,19 +181,13 @@ export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="credit_real">Crèdit real</Label>
-              <Input 
-                id="credit_real" 
-                type="number" 
+              <Input
+                id="credit_real"
+                type="number"
                 step="0.01"
-                {...register("credit_real")} 
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="percentage_modified">% Modificat</Label>
-              <Input 
-                id="percentage_modified" 
-                type="number" 
-                {...register("percentage_modified")} 
+                readOnly
+                className="bg-muted font-semibold"
+                {...register("credit_real")}
               />
             </div>
           </div>

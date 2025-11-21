@@ -14,15 +14,20 @@ interface LotFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  extendable?: boolean;
 }
 
-export const LotFormDialog = ({ contractId, lot, open, onOpenChange, onSuccess }: LotFormDialogProps) => {
+export const LotFormDialog = ({ contractId, lot, open, onOpenChange, onSuccess, extendable = false }: LotFormDialogProps) => {
   const { toast } = useToast();
-  const { register, handleSubmit, reset } = useForm({
+  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm({
     defaultValues: lot || {}
   });
   const [loading, setLoading] = useState(false);
   const isEdit = !!lot;
+
+  const startDate = watch("start_date");
+  const endDate = watch("end_date");
+  const extensionStartDate = watch("extension_start_date");
 
   const onSubmit = async (data: any) => {
     setLoading(true);
@@ -35,9 +40,9 @@ export const LotFormDialog = ({ contractId, lot, open, onOpenChange, onSuccess }
         cpv: data.cpv || null,
         start_date: data.start_date || null,
         end_date: data.end_date || null,
-        extension_start_date: data.extension_start_date || null,
-        extension_end_date: data.extension_end_date || null,
-        extension_communication_deadline: data.extension_communication_deadline || null,
+        extension_start_date: extendable ? (data.extension_start_date || null) : null,
+        extension_end_date: extendable ? (data.extension_end_date || null) : null,
+        extension_communication_deadline: extendable ? (data.extension_communication_deadline || null) : null,
         observations: data.observations || null,
       };
 
@@ -112,21 +117,55 @@ export const LotFormDialog = ({ contractId, lot, open, onOpenChange, onSuccess }
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="extension_start_date">Data inici pròrroga</Label>
-              <Input id="extension_start_date" type="date" {...register("extension_start_date")} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="extension_end_date">Data fi pròrroga</Label>
-              <Input id="extension_end_date" type="date" {...register("extension_end_date")} />
-            </div>
-          </div>
+          {extendable && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="extension_communication_deadline">Data límit comunicació pròrroga</Label>
+                <Input id="extension_communication_deadline" type="date" {...register("extension_communication_deadline")} />
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="extension_communication_deadline">Termini comunicació pròrroga</Label>
-            <Input id="extension_communication_deadline" type="date" {...register("extension_communication_deadline")} />
-          </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="extension_start_date">Data inici pròrroga</Label>
+                  <Input
+                    id="extension_start_date"
+                    type="date"
+                    {...register("extension_start_date", {
+                      validate: (value) => {
+                        if (!value) return true;
+                        if (endDate && value <= endDate) {
+                          return "La data d'inici de pròrroga ha de ser posterior a la data de fi del lot";
+                        }
+                        return true;
+                      }
+                    })}
+                  />
+                  {errors.extension_start_date && (
+                    <p className="text-sm text-destructive">{errors.extension_start_date.message as string}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="extension_end_date">Data fi pròrroga</Label>
+                  <Input
+                    id="extension_end_date"
+                    type="date"
+                    {...register("extension_end_date", {
+                      validate: (value) => {
+                        if (!value) return true;
+                        if (extensionStartDate && value <= extensionStartDate) {
+                          return "La data de fi de pròrroga ha de ser posterior a la data d'inici de pròrroga";
+                        }
+                        return true;
+                      }
+                    })}
+                  />
+                  {errors.extension_end_date && (
+                    <p className="text-sm text-destructive">{errors.extension_end_date.message as string}</p>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="observations">Observacions</Label>

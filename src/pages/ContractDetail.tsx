@@ -413,18 +413,30 @@ const ContractDetail = () => {
                                     </AccordionTrigger>
                                     <AccordionContent className="px-3 pb-3">
                                       <div className="space-y-3 pt-2">
-                                        <div className="grid grid-cols-3 gap-2 text-xs">
+                                        <div className={`grid ${contract.modifiable ? "grid-cols-5" : "grid-cols-3"} gap-2 text-xs`}>
                                           <div>
                                             <p className="text-muted-foreground">Crèdit compromès:</p>
                                             <p className="font-medium">{formatCurrency(credit.credit_committed_d)}</p>
                                           </div>
+                                          {contract.modifiable && (
+                                            <>
+                                              <div>
+                                                <p className="text-muted-foreground">Modificació:</p>
+                                                <p className="font-medium">{formatCurrency(credit.modificacio_credit || 0)}</p>
+                                              </div>
+                                              <div>
+                                                <p className="text-muted-foreground">% Modificat:</p>
+                                                <p className="font-medium">{credit.percentage_modified || 0}%</p>
+                                              </div>
+                                            </>
+                                          )}
                                           <div>
                                             <p className="text-muted-foreground">Crèdit reconegut:</p>
                                             <p className="font-medium">{formatCurrency(credit.credit_recognized_o)}</p>
                                           </div>
                                           <div>
-                                            <p className="text-muted-foreground">% Modificat:</p>
-                                            <p className="font-medium">{credit.percentage_modified || 0}%</p>
+                                            <p className="text-muted-foreground">Crèdit real:</p>
+                                            <p className="font-medium">{formatCurrency(credit.credit_real)}</p>
                                           </div>
                                         </div>
 
@@ -524,6 +536,7 @@ const ContractDetail = () => {
             open={lotDialogOpen}
             onOpenChange={setLotDialogOpen}
             onSuccess={fetchContractDetail}
+            extendable={contract?.extendable}
           />
         )}
         {creditDialogOpen && (
@@ -533,6 +546,7 @@ const ContractDetail = () => {
             open={creditDialogOpen}
             onOpenChange={setCreditDialogOpen}
             onSuccess={fetchContractDetail}
+            modifiable={contract?.modifiable}
           />
         )}
         {invoiceDialogOpen && (
