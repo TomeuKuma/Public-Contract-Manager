@@ -245,6 +245,27 @@ export const ContractEditDialog = ({ contract, open, onOpenChange, onSuccess }: 
               </div>
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="start_date">Data inici del contracte</Label>
+                <Input
+                  id="start_date"
+                  value={contract.start_date || "-"}
+                  readOnly
+                  className="bg-muted"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="end_date">Data fi del contracte</Label>
+                <Input
+                  id="end_date"
+                  value={contract.end_date || "-"}
+                  readOnly
+                  className="bg-muted"
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label>Àrees</Label>
               <div className="border rounded-md p-3 space-y-2 max-h-40 overflow-y-auto">

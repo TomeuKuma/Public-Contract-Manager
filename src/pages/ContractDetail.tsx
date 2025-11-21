@@ -312,6 +312,22 @@ const ContractDetail = () => {
                 {!contract.extendable && !contract.modifiable && "-"}
               </div>
             </div>
+            <div>
+              <p className="text-muted-foreground mb-1">Data inici:</p>
+              <p className="font-medium">
+                {contract.start_date
+                  ? format(new Date(contract.start_date), "dd/MM/yyyy", { locale: ca })
+                  : "-"}
+              </p>
+            </div>
+            <div>
+              <p className="text-muted-foreground mb-1">Data fi:</p>
+              <p className="font-medium">
+                {contract.end_date
+                  ? format(new Date(contract.end_date), "dd/MM/yyyy", { locale: ca })
+                  : "-"}
+              </p>
+            </div>
           </div>
 
           {/* Purpose */}

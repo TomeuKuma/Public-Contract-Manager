@@ -149,6 +149,8 @@ export type Database = {
           modifiable: boolean | null
           name: string
           purpose: string | null
+          start_date: string | null
+          end_date: string | null
           updated_at: string
         }
         Insert: {
