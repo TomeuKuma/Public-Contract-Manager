@@ -20,7 +20,10 @@ export const getContracts = async (filters?: ContractFilters) => {
           id,
           name,
           credits(
-            credit_real
+            credit_real,
+            credit_committed_d,
+            modificacio_credit,
+            credit_recognized_o
           )
         )
       `)
@@ -46,7 +49,7 @@ export const getContracts = async (filters?: ContractFilters) => {
       lots: contract.lots?.map((lot: any) => ({
         ...lot,
         credit_real_total: lot.credits?.reduce(
-          (sum: number, credit: any) => sum + (Number(credit.credit_real) || 0),
+          (sum: number, credit: any) => sum + ((Number(credit.credit_committed_d) || 0) + (Number(credit.modificacio_credit) || 0) - (Number(credit.credit_recognized_o) || 0)),
           0
         ),
       })),
@@ -121,7 +124,7 @@ export const getContractById = async (id: string) => {
       lots: data.lots?.map((lot: any) => ({
         ...lot,
         credit_real_total: lot.credits?.reduce(
-          (sum: number, credit: any) => sum + (Number(credit.credit_real) || 0),
+          (sum: number, credit: any) => sum + ((Number(credit.credit_committed_d) || 0) + (Number(credit.modificacio_credit) || 0) - (Number(credit.credit_recognized_o) || 0)),
           0
         ),
         credits: lot.credits?.map((credit: any) => ({

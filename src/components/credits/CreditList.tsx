@@ -50,18 +50,18 @@ export function CreditList({
                                         </span>
                                     </div>
                                     <div className="text-right text-sm">
-                                        <p className="font-semibold">{formatCurrency(credit.credit_real)}</p>
+                                        <p className="font-semibold">{formatCurrency((credit.credit_committed_d || 0) + (credit.modificacio_credit || 0) - (credit.credit_recognized_o || 0))}</p>
                                     </div>
                                 </div>
                             </AccordionTrigger>
                             <AccordionContent className="px-3 pb-3">
                                 <div className="space-y-3 pt-2">
-                                    <div className={`grid ${modifiable ? "grid-cols-5" : "grid-cols-3"} gap-2 text-xs`}>
+                                    <div className={`grid ${(modifiable || (credit.modificacio_credit && credit.modificacio_credit !== 0)) ? "grid-cols-5" : "grid-cols-3"} gap-2 text-xs`}>
                                         <div>
                                             <p className="text-muted-foreground">Crèdit compromès:</p>
                                             <p className="font-medium">{formatCurrency(credit.credit_committed_d)}</p>
                                         </div>
-                                        {modifiable && (
+                                        {(modifiable || (credit.modificacio_credit && credit.modificacio_credit !== 0)) && (
                                             <>
                                                 <div>
                                                     <p className="text-muted-foreground">Modificació:</p>
@@ -79,7 +79,7 @@ export function CreditList({
                                         </div>
                                         <div>
                                             <p className="text-muted-foreground">Crèdit real:</p>
-                                            <p className="font-medium">{formatCurrency(credit.credit_real)}</p>
+                                            <p className="font-medium">{formatCurrency((credit.credit_committed_d || 0) + (credit.modificacio_credit || 0) - (credit.credit_recognized_o || 0))}</p>
                                         </div>
                                         {credit.projecte_inversio && (
                                             <div className="col-span-full">

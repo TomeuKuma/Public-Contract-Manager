@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 
 import { Credit } from "@/types";
+import { calculateCreditReal, calculatePercentageModified } from "@/lib/calculations";
 
 interface CreditFormDialogProps {
   lotId: string;
@@ -74,6 +75,8 @@ export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess,
   const modification = watch("modificacio_credit");
   const isInvestmentProject = watch("projecte_inversio");
 
+
+
   useEffect(() => {
     const committed = typeof creditCommitted === 'string' ? parseFloat(creditCommitted) : (creditCommitted || 0);
     const recognized = typeof creditRecognized === 'string' ? parseFloat(creditRecognized) : (creditRecognized || 0);
@@ -81,19 +84,14 @@ export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess,
 
     // Calculate Percentage
     if (modifiable) {
-      if (committed !== 0) {
-        const percentage = (mod / committed) * 100;
-        setValue("percentage_modified", Number(percentage.toFixed(2)));
-      } else {
-        setValue("percentage_modified", 0);
-      }
+      const percentage = calculatePercentageModified(mod, committed);
+      setValue("percentage_modified", Number(percentage.toFixed(2)));
     }
 
     // Calculate Real Credit
     // Formula: (Committed + Modification) - Recognized
-    // If not modifiable, modification is ignored (treated as 0)
-    const effectiveModification = modifiable ? mod : 0;
-    const real = (committed + effectiveModification) - recognized;
+    // We use modification if it exists, regardless of modifiable flag, to support cases where data exists but flag changed.
+    const real = calculateCreditReal(committed, mod, recognized);
     setValue("credit_real", Number(real.toFixed(2)).toString());
 
   }, [creditCommitted, creditRecognized, modification, modifiable, setValue]);
@@ -101,17 +99,30 @@ export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess,
   const onSubmit = async (data: CreditFormData) => {
     setLoading(true);
     try {
+      // Retrieve modification value: if modifiable is true, use form data; otherwise use existing credit value or 0
+      // Note: data.modificacio_credit might be undefined if the input is not rendered
+      const modification = modifiable && data.modificacio_credit !== undefined
+        ? (parseFloat(data.modificacio_credit) || 0)
+        : (credit?.modificacio_credit || 0);
+
+      const committed = parseFloat(data.credit_committed_d) || 0;
+      const recognized = parseFloat(data.credit_recognized_o) || 0;
+
+      // Recalculate derived values to ensure consistency
+      const percentage = calculatePercentageModified(modification, committed);
+      const real = calculateCreditReal(committed, modification, recognized);
+
       const creditData = {
         lot_id: lotId,
         any: parseInt(data.any) || new Date().getFullYear(),
         organic_item: data.organic_item || null,
         program_item: data.program_item || null,
         economic_item: data.economic_item || null,
-        credit_committed_d: parseFloat(data.credit_committed_d) || 0,
-        credit_recognized_o: parseFloat(data.credit_recognized_o) || 0,
-        credit_real: parseFloat(data.credit_real) || 0,
-        percentage_modified: modifiable ? (parseFloat(data.percentage_modified.toString()) || 0) : 0,
-        modificacio_credit: modifiable ? (parseFloat(data.modificacio_credit) || 0) : 0,
+        credit_committed_d: committed,
+        credit_recognized_o: recognized,
+        credit_real: real,
+        percentage_modified: Number(percentage.toFixed(2)),
+        modificacio_credit: modification,
         accounting_document_number: data.accounting_document_number || null,
         projecte_inversio: data.projecte_inversio || false,
         codi_projecte_inversio: data.projecte_inversio ? data.codi_projecte_inversio : null,
