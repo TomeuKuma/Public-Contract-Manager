@@ -18,18 +18,7 @@ import {
 } from "@/components/ui/select";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
-const INSTRUCTOR_OPTIONS = [
-  "Karen Carriel",
-  "Marta Bonet",
-  "Xisca Perelló",
-  "Bartomeu Miralles",
-  "María Fariñas",
-  "Juan de Villalonga",
-  "Elisa León",
-  "María Mayol",
-  "Francisca Roig",
-  "Servei Jurídico-Administratiu",
-];
+
 
 const CONTRACTING_BODY_OPTIONS = [
   "UFAG Residència Llar dels Ancians",
@@ -73,7 +62,7 @@ const NewContract = () => {
     name: "",
     dossier_number: "",
     file_number: "",
-    instructor_technician: "",
+    tipus_necessitat: "Puntual",
     contracting_body: "",
     contact_responsible: "",
     award_procedure: "",
@@ -301,22 +290,19 @@ const NewContract = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="instructor_technician">Tècnic instructor</Label>
+                  <Label htmlFor="tipus_necessitat">Tipus de necessitat</Label>
                   <Select
-                    value={formData.instructor_technician}
+                    value={formData.tipus_necessitat}
                     onValueChange={(value) =>
-                      setFormData({ ...formData, instructor_technician: value })
+                      setFormData({ ...formData, tipus_necessitat: value })
                     }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecciona..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {INSTRUCTOR_OPTIONS.map((option) => (
-                        <SelectItem key={option} value={option}>
-                          {option}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="Puntual">Puntual</SelectItem>
+                      <SelectItem value="Recurrent">Recurrent</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

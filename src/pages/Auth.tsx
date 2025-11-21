@@ -55,8 +55,8 @@ const Auth = () => {
         if (error) throw error;
 
         toast({
-          title: "Compte creat!",
-          description: "Pots iniciar sessió ara.",
+          title: "Compte creat correctament",
+          description: "Si us plau, revisa el teu correu electrònic per confirmar el teu compte abans d'iniciar sessió.",
         });
         setIsLogin(true);
       }

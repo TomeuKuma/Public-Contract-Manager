@@ -277,8 +277,8 @@ const ContractDetail = () => {
               </p>
             </div>
             <div>
-              <p className="text-muted-foreground mb-1">Tècnic instructor:</p>
-              <p className="font-medium">{contract.instructor_technician || "-"}</p>
+              <p className="text-muted-foreground mb-1">Tipus de necessitat:</p>
+              <p className="font-medium">{contract.tipus_necessitat || "-"}</p>
             </div>
             <div>
               <p className="text-muted-foreground mb-1">Òrgan de contractació:</p>
@@ -403,7 +403,7 @@ const ContractDetail = () => {
                                       <div className="flex items-center justify-between w-full pr-2">
                                         <div className="text-left text-sm">
                                           <span className="font-medium">
-                                            {credit.organic_item || "-"} / {credit.program_item || "-"} / {credit.economic_item || "-"}
+                                            {credit.any} - {credit.organic_item || "-"} / {credit.program_item || "-"} / {credit.economic_item || "-"}
                                           </span>
                                         </div>
                                         <div className="text-right text-sm">

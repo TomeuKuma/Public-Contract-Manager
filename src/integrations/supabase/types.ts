@@ -144,7 +144,8 @@ export type Database = {
           extendable: boolean | null
           file_number: string | null
           id: string
-          instructor_technician: string | null
+          instructor_technician: never // Removed
+          tipus_necessitat: "Puntual" | "Recurrent" | null
           modifiable: boolean | null
           name: string
           purpose: string | null
@@ -160,7 +161,7 @@ export type Database = {
           extendable?: boolean | null
           file_number?: string | null
           id?: string
-          instructor_technician?: string | null
+          tipus_necessitat?: "Puntual" | "Recurrent" | null
           modifiable?: boolean | null
           name: string
           purpose?: string | null
@@ -176,7 +177,7 @@ export type Database = {
           extendable?: boolean | null
           file_number?: string | null
           id?: string
-          instructor_technician?: string | null
+          tipus_necessitat?: "Puntual" | "Recurrent" | null
           modifiable?: boolean | null
           name?: string
           purpose?: string | null
@@ -199,6 +200,7 @@ export type Database = {
           percentage_modified: number | null
           program_item: string | null
           updated_at: string
+          any: number
         }
         Insert: {
           accounting_document_number?: string | null
@@ -214,6 +216,7 @@ export type Database = {
           percentage_modified?: number | null
           program_item?: string | null
           updated_at?: string
+          any: number
         }
         Update: {
           accounting_document_number?: string | null
@@ -229,6 +232,7 @@ export type Database = {
           percentage_modified?: number | null
           program_item?: string | null
           updated_at?: string
+          any?: number
         }
         Relationships: [
           {

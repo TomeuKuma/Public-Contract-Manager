@@ -24,6 +24,7 @@ export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess,
       modificacio_credit: credit.modificacio_credit || 0,
       percentage_modified: credit.percentage_modified || 0
     } : {
+      any: new Date().getFullYear(),
       modificacio_credit: 0,
       percentage_modified: 0
     }
@@ -64,6 +65,7 @@ export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess,
     try {
       const creditData = {
         lot_id: lotId,
+        any: parseInt(data.any) || new Date().getFullYear(),
         organic_item: data.organic_item || null,
         program_item: data.program_item || null,
         economic_item: data.economic_item || null,
@@ -114,7 +116,21 @@ export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess,
           <DialogTitle>{isEdit ? "Editar crèdit" : "Afegir crèdit"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="any">Any *</Label>
+              <Input
+                id="any"
+                type="number"
+                {...register("any", {
+                  required: true,
+                  min: 1900,
+                  max: 2100,
+                  minLength: 4,
+                  maxLength: 4
+                })}
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="organic_item">Orgànica</Label>
               <Input id="organic_item" {...register("organic_item")} />
@@ -129,9 +145,10 @@ export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess,
             </div>
           </div>
 
-          <div className={`grid ${modifiable ? "grid-cols-3" : "grid-cols-2"} gap-4`}>
+          {/* Line 2 */}
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="credit_committed_d">Crèdit compromès D *</Label>
+              <Label htmlFor="credit_committed_d">Crèdit compromès (€) *</Label>
               <Input
                 id="credit_committed_d"
                 type="number"
@@ -139,48 +156,59 @@ export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess,
                 {...register("credit_committed_d", { required: true })}
               />
             </div>
-
-            {modifiable && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="modificacio_credit">Modificació de crèdit</Label>
-                  <Input
-                    id="modificacio_credit"
-                    type="number"
-                    step="0.01"
-                    placeholder="0,00 €"
-                    {...register("modificacio_credit")}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="percentage_modified">% Modificat</Label>
-                  <div className="relative">
-                    <Input
-                      id="percentage_modified"
-                      readOnly
-                      className="bg-muted"
-                      {...register("percentage_modified")}
-                    />
-                    <span className="absolute right-3 top-2.5 text-sm text-muted-foreground">%</span>
-                  </div>
-                </div>
-              </>
-            )}
-
             <div className="space-y-2">
-              <Label htmlFor="credit_recognized_o">Crèdit reconegut O</Label>
+              <Label htmlFor="accounting_document_number">Núm. D/AD/ADO</Label>
+              <Input id="accounting_document_number" {...register("accounting_document_number")} />
+            </div>
+          </div>
+
+          {/* Line 3 (Conditional) */}
+          {modifiable && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="modificacio_credit">Modificació de crèdit (€)</Label>
+                <Input
+                  id="modificacio_credit"
+                  type="number"
+                  step="0.01"
+                  placeholder="0,00 €"
+                  {...register("modificacio_credit")}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="percentage_modified">% Modificat</Label>
+                <div className="relative">
+                  <Input
+                    id="percentage_modified"
+                    readOnly
+                    className="bg-muted"
+                    {...register("percentage_modified")}
+                  />
+                  <span className="absolute right-3 top-2.5 text-sm text-muted-foreground">%</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Line 4 */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="credit_recognized_o">Crèdit reconegut O(€)</Label>
               <Input
                 id="credit_recognized_o"
                 type="number"
                 step="0.01"
+                readOnly
+                className="bg-muted"
                 {...register("credit_recognized_o")}
               />
             </div>
           </div>
 
+          {/* Line 5 */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="credit_real">Crèdit real</Label>
+              <Label htmlFor="credit_real">Crèdit real (€)</Label>
               <Input
                 id="credit_real"
                 type="number"
@@ -190,11 +218,6 @@ export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess,
                 {...register("credit_real")}
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="accounting_document_number">Núm. document comptable</Label>
-            <Input id="accounting_document_number" {...register("accounting_document_number")} />
           </div>
 
           <DialogFooter>

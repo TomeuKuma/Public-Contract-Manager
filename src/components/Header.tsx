@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { LogOut, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +25,8 @@ const Header = () => {
     });
     navigate("/auth");
   };
+
+
 
   return (
     <header className="border-b bg-card">

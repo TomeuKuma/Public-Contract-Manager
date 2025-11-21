@@ -17,11 +17,7 @@ interface ContractEditDialogProps {
   onSuccess: () => void;
 }
 
-const INSTRUCTORS = [
-  "Karen Carriel", "Marta Bonet", "Xisca Perelló", "Bartomeu Miralles",
-  "María Fariñas", "Juan de Villalonga", "Elisa León", "María Mayol",
-  "Francisca Roig", "Servei Jurídico-Administratiu"
-];
+
 
 const CONTRACTING_BODIES = [
   "UFAG Residència Llar dels Ancians",
@@ -45,7 +41,10 @@ const CONTRACT_TYPES = ["Subministrament", "Servei", "Obra", "Concessió"];
 export const ContractEditDialog = ({ contract, open, onOpenChange, onSuccess }: ContractEditDialogProps) => {
   const { toast } = useToast();
   const { register, handleSubmit, setValue, watch } = useForm({
-    defaultValues: contract
+    defaultValues: {
+      ...contract,
+      tipus_necessitat: contract.tipus_necessitat || "Puntual"
+    }
   });
   const [areas, setAreas] = useState<any[]>([]);
   const [centers, setCenters] = useState<any[]>([]);
@@ -127,7 +126,7 @@ export const ContractEditDialog = ({ contract, open, onOpenChange, onSuccess }: 
           name: data.name,
           file_number: data.file_number,
           dossier_number: data.dossier_number,
-          instructor_technician: data.instructor_technician,
+          tipus_necessitat: data.tipus_necessitat,
           contracting_body: data.contracting_body,
           contact_responsible: data.contact_responsible,
           award_procedure: data.award_procedure,
@@ -287,15 +286,14 @@ export const ContractEditDialog = ({ contract, open, onOpenChange, onSuccess }: 
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="instructor_technician">Tècnic instructor</Label>
-              <Select onValueChange={(value) => setValue("instructor_technician", value)} defaultValue={contract.instructor_technician}>
+              <Label htmlFor="tipus_necessitat">Tipus de necessitat</Label>
+              <Select onValueChange={(value) => setValue("tipus_necessitat", value)} defaultValue={contract.tipus_necessitat}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un tècnic" />
+                  <SelectValue placeholder="Selecciona un tipus" />
                 </SelectTrigger>
                 <SelectContent>
-                  {INSTRUCTORS.map(instructor => (
-                    <SelectItem key={instructor} value={instructor}>{instructor}</SelectItem>
-                  ))}
+                  <SelectItem value="Puntual">Puntual</SelectItem>
+                  <SelectItem value="Recurrent">Recurrent</SelectItem>
                 </SelectContent>
               </Select>
             </div>
