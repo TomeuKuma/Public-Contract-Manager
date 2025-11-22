@@ -20,11 +20,14 @@ export const getContracts = async (filters?: ContractFilters) => {
         lots(
           id,
           name,
+          start_date,
+          end_date,
           credits(
             credit_real,
             credit_committed_d,
             modificacio_credit,
-            credit_recognized_o
+            credit_recognized_o,
+            any
           )
         )
       `)
@@ -108,20 +111,34 @@ export const getContracts = async (filters?: ContractFilters) => {
           // Filter Credits
           lot.credits = lot.credits?.filter((credit: any) => {
             // Filter Invoices
-            credit.invoices = credit.invoices?.filter((invoice: any) => {
-              const invoiceYear = new Date(invoice.invoice_date).getFullYear();
-              return years.includes(invoiceYear);
-            });
+            if (credit.invoices) {
+              credit.invoices = credit.invoices.filter((invoice: any) => {
+                const invoiceYear = new Date(invoice.invoice_date).getFullYear();
+                return years.includes(invoiceYear);
+              });
+            }
 
             const creditYear = Number(credit.any);
             const creditValid = years.includes(creditYear);
             return creditValid || (credit.invoices && credit.invoices.length > 0);
           });
 
+          // Recalculate lot total after filtering credits
+          if (lot.credits) {
+            lot.credit_real_total = lot.credits.reduce(
+              (sum: number, credit: any) => sum + ((Number(credit.credit_committed_d) || 0) + (Number(credit.modificacio_credit) || 0) - (Number(credit.credit_recognized_o) || 0)),
+              0
+            );
+          } else {
+            lot.credit_real_total = 0;
+          }
+
+          // A lot is valid if it has credits in the selected years OR its period overlaps with selected years
           const lotValid = isPeriodInYears(lot.start_date, lot.end_date);
           return lotValid || (lot.credits && lot.credits.length > 0);
         });
 
+        // A contract is valid if it has valid lots OR its period overlaps with selected years
         const contractValid = isPeriodInYears(contract.start_date, contract.end_date);
         return contractValid || (contract.lots && contract.lots.length > 0);
       });
@@ -209,15 +226,27 @@ export const getContractById = async (id: string, filters?: ContractFilters) => 
         // Filter Credits
         lot.credits = lot.credits?.filter((credit: any) => {
           // Filter Invoices
-          credit.invoices = credit.invoices?.filter((invoice: any) => {
-            const invoiceYear = new Date(invoice.invoice_date).getFullYear();
-            return years.includes(invoiceYear);
-          });
+          if (credit.invoices) {
+            credit.invoices = credit.invoices.filter((invoice: any) => {
+              const invoiceYear = new Date(invoice.invoice_date).getFullYear();
+              return years.includes(invoiceYear);
+            });
+          }
 
           const creditYear = Number(credit.any);
           const creditValid = years.includes(creditYear);
           return creditValid || (credit.invoices && credit.invoices.length > 0);
         });
+
+        // Recalculate lot total after filtering credits
+        if (lot.credits) {
+          lot.credit_real_total = lot.credits.reduce(
+            (sum: number, credit: any) => sum + ((Number(credit.credit_committed_d) || 0) + (Number(credit.modificacio_credit) || 0) - (Number(credit.credit_recognized_o) || 0)),
+            0
+          );
+        } else {
+          lot.credit_real_total = 0;
+        }
 
         const lotValid = isPeriodInYears(lot.start_date, lot.end_date);
         return lotValid || (lot.credits && lot.credits.length > 0);

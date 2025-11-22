@@ -221,6 +221,7 @@ const ContractDetail = () => {
         {creditDialogOpen && (
           <CreditFormDialog
             lotId={editingCredit?.lot_id || selectedLotId}
+            lot={contract?.lots?.find(l => l.id === (editingCredit?.lot_id || selectedLotId))}
             credit={editingCredit}
             open={creditDialogOpen}
             onOpenChange={setCreditDialogOpen}
@@ -231,6 +232,11 @@ const ContractDetail = () => {
         {invoiceDialogOpen && (
           <InvoiceFormDialog
             creditId={editingInvoice?.credit_id || selectedCreditId}
+            creditYear={
+              editingInvoice
+                ? contract?.lots?.flatMap(l => l.credits).find(c => c?.id === editingInvoice.credit_id)?.any
+                : contract?.lots?.flatMap(l => l.credits).find(c => c?.id === selectedCreditId)?.any
+            }
             invoice={editingInvoice}
             open={invoiceDialogOpen}
             onOpenChange={setInvoiceDialogOpen}

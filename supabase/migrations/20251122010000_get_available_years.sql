@@ -5,16 +5,16 @@ BEGIN
     RETURN QUERY
     WITH all_years AS (
         -- Years from Contracts (start_date to end_date)
-        SELECT DISTINCT EXTRACT(YEAR FROM generate_series(start_date, end_date, '1 year'))::INTEGER as y
+        SELECT DISTINCT generate_series(EXTRACT(YEAR FROM start_date)::INTEGER, EXTRACT(YEAR FROM end_date)::INTEGER) as y
         FROM contracts
         WHERE start_date IS NOT NULL AND end_date IS NOT NULL
         
         UNION
         
-        -- Years from Lots (start_date to end_date)
-        SELECT DISTINCT EXTRACT(YEAR FROM generate_series(start_date, end_date, '1 year'))::INTEGER as y
+        -- Years from Lots (start_date to end_date or extension_end_date)
+        SELECT DISTINCT generate_series(EXTRACT(YEAR FROM start_date)::INTEGER, EXTRACT(YEAR FROM COALESCE(extension_end_date, end_date))::INTEGER) as y
         FROM lots
-        WHERE start_date IS NOT NULL AND end_date IS NOT NULL
+        WHERE start_date IS NOT NULL AND (end_date IS NOT NULL OR extension_end_date IS NOT NULL)
         
         UNION
         

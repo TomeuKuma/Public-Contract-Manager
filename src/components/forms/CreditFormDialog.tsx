@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,13 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
-import { Credit } from "@/types";
+import { Credit, Lot } from "@/types";
 import { calculateCreditReal, calculatePercentageModified } from "@/lib/calculations";
 
 interface CreditFormDialogProps {
   lotId: string;
+  lot?: Lot;
   credit?: Credit | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -35,8 +37,24 @@ interface CreditFormData {
   percentage_modified: number;
 }
 
-export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess, modifiable = false }: CreditFormDialogProps) => {
+export const CreditFormDialog = ({ lotId, lot, credit, open, onOpenChange, onSuccess, modifiable = false }: CreditFormDialogProps) => {
   const { toast } = useToast();
+
+  // Calculate available years based on lot duration
+  const availableYears = useMemo(() => {
+    if (!lot || !lot.start_date || !lot.end_date) return [];
+
+    const startYear = new Date(lot.start_date).getFullYear();
+    const endDate = lot.extension_end_date ? new Date(lot.extension_end_date) : new Date(lot.end_date);
+    const endYear = endDate.getFullYear();
+
+    const years = [];
+    for (let year = startYear; year <= endYear; year++) {
+      years.push(year);
+    }
+    return years;
+  }, [lot]);
+
   const { register, handleSubmit, reset, watch, setValue } = useForm<CreditFormData>({
     defaultValues: credit ? {
       ...credit,
@@ -53,7 +71,7 @@ export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess,
       program_item: credit.program_item,
       economic_item: credit.economic_item,
     } : {
-      any: new Date().getFullYear().toString(),
+      any: availableYears.length > 0 ? availableYears[0].toString() : new Date().getFullYear().toString(),
       modificacio_credit: "0",
       percentage_modified: 0,
       projecte_inversio: false,
@@ -74,8 +92,13 @@ export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess,
   const creditRecognized = watch("credit_recognized_o");
   const modification = watch("modificacio_credit");
   const isInvestmentProject = watch("projecte_inversio");
+  const selectedYear = watch("any");
 
-
+  useEffect(() => {
+    if (!isEdit && availableYears.length > 0 && !selectedYear) {
+      setValue("any", availableYears[0].toString());
+    }
+  }, [availableYears, isEdit, selectedYear, setValue]);
 
   useEffect(() => {
     const committed = typeof creditCommitted === 'string' ? parseFloat(creditCommitted) : (creditCommitted || 0);
@@ -170,17 +193,35 @@ export const CreditFormDialog = ({ lotId, credit, open, onOpenChange, onSuccess,
           <div className="grid grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="any">Any *</Label>
-              <Input
-                id="any"
-                type="number"
-                {...register("any", {
-                  required: true,
-                  min: 1900,
-                  max: 2100,
-                  minLength: 4,
-                  maxLength: 4
-                })}
-              />
+              {availableYears.length > 0 ? (
+                <Select
+                  onValueChange={(value) => setValue("any", value)}
+                  defaultValue={credit?.any.toString() || (availableYears.length > 0 ? availableYears[0].toString() : "")}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona un any" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableYears.map((year) => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  id="any"
+                  type="number"
+                  {...register("any", {
+                    required: true,
+                    min: 1900,
+                    max: 2100,
+                    minLength: 4,
+                    maxLength: 4
+                  })}
+                />
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="organic_item">Orgànica</Label>

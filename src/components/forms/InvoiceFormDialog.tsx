@@ -12,6 +12,7 @@ import { Invoice } from "@/types";
 
 interface InvoiceFormDialogProps {
   creditId: string;
+  creditYear?: number;
   invoice?: Invoice | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -27,9 +28,9 @@ interface InvoiceFormData {
   center_id: string;
 }
 
-export const InvoiceFormDialog = ({ creditId, invoice, open, onOpenChange, onSuccess, availableCenters }: InvoiceFormDialogProps) => {
+export const InvoiceFormDialog = ({ creditId, creditYear, invoice, open, onOpenChange, onSuccess, availableCenters }: InvoiceFormDialogProps) => {
   const { toast } = useToast();
-  const { register, handleSubmit, reset } = useForm<InvoiceFormData>({
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<InvoiceFormData>({
     defaultValues: invoice ? {
       ...invoice,
       base_amount: invoice.base_amount.toString(),
@@ -97,7 +98,21 @@ export const InvoiceFormDialog = ({ creditId, invoice, open, onOpenChange, onSuc
 
           <div className="space-y-2">
             <Label htmlFor="invoice_date">Data de factura *</Label>
-            <Input id="invoice_date" type="date" {...register("invoice_date", { required: true })} />
+            <Input
+              id="invoice_date"
+              type="date"
+              {...register("invoice_date", {
+                required: true,
+                validate: (value) => {
+                  if (!creditYear) return true;
+                  const date = new Date(value);
+                  return date.getFullYear() === creditYear || `Data fora dels límits de l'exercici pressupostari del crèdit`;
+                }
+              })}
+            />
+            {errors.invoice_date && (
+              <p className="text-sm text-destructive">{errors.invoice_date.message}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
