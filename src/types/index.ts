@@ -91,4 +91,5 @@ export interface ContractFilters {
     selectedCenters: string[];
     selectedContractTypes: string[];
     selectedAwardProcedures: string[];
+    selectedYears: number[];
 }

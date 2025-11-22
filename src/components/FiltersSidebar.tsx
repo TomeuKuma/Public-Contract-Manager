@@ -6,116 +6,42 @@ import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { useFilters } from "@/hooks/useFilters";
 
-interface Area {
-  id: string;
-  name: string;
-}
+const FiltersSidebar = () => {
+  const {
+    filters,
+    areas,
+    centers,
+    setSearch,
+    handleAreaToggle,
+    handleCenterToggle,
+    handleContractTypeToggle,
+    handleAwardProcedureToggle,
+    handleYearToggle,
+    clearFilters,
+  } = useFilters();
 
-interface Center {
-  id: string;
-  name: string;
-  area_id: string;
-}
-
-interface Filters {
-  search: string;
-  selectedAreas: string[];
-  selectedCenters: string[];
-  selectedContractTypes: string[];
-  selectedAwardProcedures: string[];
-}
-
-interface FiltersSidebarProps {
-  onFilterChange: (filters: Filters) => void;
-}
-
-const FiltersSidebar = ({ onFilterChange }: FiltersSidebarProps) => {
-  const [search, setSearch] = useState("");
-  const [areas, setAreas] = useState<Area[]>([]);
-  const [centers, setCenters] = useState<Center[]>([]);
-  const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
-  const [selectedCenters, setSelectedCenters] = useState<string[]>([]);
-  const [selectedContractTypes, setSelectedContractTypes] = useState<string[]>([]);
-  const [selectedAwardProcedures, setSelectedAwardProcedures] = useState<string[]>([]);
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
 
   useEffect(() => {
-    fetchAreas();
-    fetchCenters();
+    fetchAvailableYears();
   }, []);
 
-  useEffect(() => {
-    onFilterChange({
-      search,
-      selectedAreas,
-      selectedCenters,
-      selectedContractTypes,
-      selectedAwardProcedures,
-    });
-  }, [search, selectedAreas, selectedCenters, selectedContractTypes, selectedAwardProcedures]);
-
-  const fetchAreas = async () => {
-    const { data, error } = await supabase
-      .from("areas")
-      .select("*")
-      .order("name");
-
-    if (data && !error) {
-      setAreas(data);
+  const fetchAvailableYears = async () => {
+    // @ts-ignore
+    const { data, error } = await supabase.rpc("get_available_years");
+    if (error) {
+      console.error("Error fetching available years:", error);
+      return;
+    }
+    if (data) {
+      setAvailableYears(data.map((d: any) => d.year));
     }
   };
 
-  const fetchCenters = async () => {
-    const { data, error } = await supabase
-      .from("centers")
-      .select("*")
-      .order("name");
-
-    if (data && !error) {
-      setCenters(data);
-    }
-  };
-
-  const handleAreaToggle = (areaId: string) => {
-    setSelectedAreas((prev) =>
-      prev.includes(areaId)
-        ? prev.filter((id) => id !== areaId)
-        : [...prev, areaId]
-    );
-  };
-
-  const handleCenterToggle = (centerId: string) => {
-    setSelectedCenters((prev) =>
-      prev.includes(centerId)
-        ? prev.filter((id) => id !== centerId)
-        : [...prev, centerId]
-    );
-  };
-
-  const handleContractTypeToggle = (type: string) => {
-    setSelectedContractTypes((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
-    );
-  };
-
-  const handleAwardProcedureToggle = (procedure: string) => {
-    setSelectedAwardProcedures((prev) =>
-      prev.includes(procedure)
-        ? prev.filter((p) => p !== procedure)
-        : [...prev, procedure]
-    );
-  };
-
-  const clearFilters = () => {
-    setSearch("");
-    setSelectedAreas([]);
-    setSelectedCenters([]);
-    setSelectedContractTypes([]);
-    setSelectedAwardProcedures([]);
-  };
-
-  const filteredCenters = selectedAreas.length > 0
-    ? centers.filter((c) => selectedAreas.includes(c.area_id))
+  const filteredCenters = filters.selectedAreas.length > 0
+    ? centers.filter((c) => filters.selectedAreas.includes(c.area_id))
     : centers;
 
   const contractTypes = ["Subministrament", "Servei", "Obra", "Concessió"];
@@ -126,11 +52,12 @@ const FiltersSidebar = ({ onFilterChange }: FiltersSidebarProps) => {
   ];
 
   const hasActiveFilters =
-    search ||
-    selectedAreas.length > 0 ||
-    selectedCenters.length > 0 ||
-    selectedContractTypes.length > 0 ||
-    selectedAwardProcedures.length > 0;
+    filters.search ||
+    filters.selectedAreas.length > 0 ||
+    filters.selectedCenters.length > 0 ||
+    filters.selectedContractTypes.length > 0 ||
+    filters.selectedAwardProcedures.length > 0 ||
+    filters.selectedYears.length > 0;
 
   return (
     <aside className="w-64 border-r bg-card p-4 space-y-6 overflow-y-auto">
@@ -157,12 +84,42 @@ const FiltersSidebar = ({ onFilterChange }: FiltersSidebarProps) => {
             <Input
               id="search"
               placeholder="Nom, núm. expedient..."
-              value={search}
+              value={filters.search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-8"
             />
           </div>
         </div>
+      </div>
+
+      <div className="space-y-3">
+        <Label>Any</Label>
+        <div className="space-y-2 max-h-48 overflow-y-auto">
+          {availableYears.map((year) => (
+            <div key={year} className="flex items-start space-x-2">
+              <Checkbox
+                id={`year-${year}`}
+                checked={filters.selectedYears.includes(year)}
+                onCheckedChange={() => handleYearToggle(year)}
+              />
+              <label
+                htmlFor={`year-${year}`}
+                className="text-sm leading-tight cursor-pointer"
+              >
+                {year}
+              </label>
+            </div>
+          ))}
+        </div>
+        {filters.selectedYears.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {filters.selectedYears.map((year) => (
+              <Badge key={year} variant="secondary" className="text-xs">
+                {year}
+              </Badge>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="space-y-3">
@@ -172,7 +129,7 @@ const FiltersSidebar = ({ onFilterChange }: FiltersSidebarProps) => {
             <div key={area.id} className="flex items-start space-x-2">
               <Checkbox
                 id={`area-${area.id}`}
-                checked={selectedAreas.includes(area.id)}
+                checked={filters.selectedAreas.includes(area.id)}
                 onCheckedChange={() => handleAreaToggle(area.id)}
               />
               <label
@@ -184,9 +141,9 @@ const FiltersSidebar = ({ onFilterChange }: FiltersSidebarProps) => {
             </div>
           ))}
         </div>
-        {selectedAreas.length > 0 && (
+        {filters.selectedAreas.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2">
-            {selectedAreas.map((areaId) => {
+            {filters.selectedAreas.map((areaId) => {
               const area = areas.find((a) => a.id === areaId);
               return (
                 <Badge key={areaId} variant="secondary" className="text-xs">
@@ -205,7 +162,7 @@ const FiltersSidebar = ({ onFilterChange }: FiltersSidebarProps) => {
             <div key={center.id} className="flex items-start space-x-2">
               <Checkbox
                 id={`center-${center.id}`}
-                checked={selectedCenters.includes(center.id)}
+                checked={filters.selectedCenters.includes(center.id)}
                 onCheckedChange={() => handleCenterToggle(center.id)}
               />
               <label
@@ -217,9 +174,9 @@ const FiltersSidebar = ({ onFilterChange }: FiltersSidebarProps) => {
             </div>
           ))}
         </div>
-        {selectedCenters.length > 0 && (
+        {filters.selectedCenters.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2">
-            {selectedCenters.map((centerId) => {
+            {filters.selectedCenters.map((centerId) => {
               const center = centers.find((c) => c.id === centerId);
               return (
                 <Badge key={centerId} variant="secondary" className="text-xs">
@@ -238,7 +195,7 @@ const FiltersSidebar = ({ onFilterChange }: FiltersSidebarProps) => {
             <div key={type} className="flex items-start space-x-2">
               <Checkbox
                 id={`type-${type}`}
-                checked={selectedContractTypes.includes(type)}
+                checked={filters.selectedContractTypes.includes(type)}
                 onCheckedChange={() => handleContractTypeToggle(type)}
               />
               <label
@@ -250,9 +207,9 @@ const FiltersSidebar = ({ onFilterChange }: FiltersSidebarProps) => {
             </div>
           ))}
         </div>
-        {selectedContractTypes.length > 0 && (
+        {filters.selectedContractTypes.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2">
-            {selectedContractTypes.map((type) => (
+            {filters.selectedContractTypes.map((type) => (
               <Badge key={type} variant="secondary" className="text-xs">
                 {type}
               </Badge>
@@ -268,7 +225,7 @@ const FiltersSidebar = ({ onFilterChange }: FiltersSidebarProps) => {
             <div key={procedure} className="flex items-start space-x-2">
               <Checkbox
                 id={`procedure-${procedure}`}
-                checked={selectedAwardProcedures.includes(procedure)}
+                checked={filters.selectedAwardProcedures.includes(procedure)}
                 onCheckedChange={() => handleAwardProcedureToggle(procedure)}
               />
               <label
@@ -280,9 +237,9 @@ const FiltersSidebar = ({ onFilterChange }: FiltersSidebarProps) => {
             </div>
           ))}
         </div>
-        {selectedAwardProcedures.length > 0 && (
+        {filters.selectedAwardProcedures.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2">
-            {selectedAwardProcedures.map((procedure) => (
+            {filters.selectedAwardProcedures.map((procedure) => (
               <Badge key={procedure} variant="secondary" className="text-xs">
                 {procedure}
               </Badge>

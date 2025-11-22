@@ -6,6 +6,7 @@ export interface ContractFilters {
   selectedCenters: string[];
   selectedContractTypes: string[];
   selectedAwardProcedures: string[];
+  selectedYears: number[];
 }
 
 export const getContracts = async (filters?: ContractFilters) => {
@@ -80,6 +81,52 @@ export const getContracts = async (filters?: ContractFilters) => {
       );
     }
 
+    // Apply year filter
+    if (filters?.selectedYears && filters.selectedYears.length > 0) {
+      const years = filters.selectedYears;
+
+      const isPeriodInYears = (start?: string, end?: string) => {
+        if (!start && !end) return false;
+        const startDate = start ? new Date(start) : null;
+        const endDate = end ? new Date(end) : null;
+        const startYear = startDate ? startDate.getFullYear() : null;
+        const endYear = endDate ? endDate.getFullYear() : null;
+
+        if (!startYear && !endYear) return false;
+
+        // Check if any selected year falls within the period [startYear, endYear]
+        return years.some(year => {
+          if (startYear && startYear > year) return false;
+          if (endYear && endYear < year) return false;
+          return true;
+        });
+      };
+
+      processedData = processedData?.filter((contract: any) => {
+        // Filter Lots
+        contract.lots = contract.lots?.filter((lot: any) => {
+          // Filter Credits
+          lot.credits = lot.credits?.filter((credit: any) => {
+            // Filter Invoices
+            credit.invoices = credit.invoices?.filter((invoice: any) => {
+              const invoiceYear = new Date(invoice.invoice_date).getFullYear();
+              return years.includes(invoiceYear);
+            });
+
+            const creditYear = Number(credit.any);
+            const creditValid = years.includes(creditYear);
+            return creditValid || (credit.invoices && credit.invoices.length > 0);
+          });
+
+          const lotValid = isPeriodInYears(lot.start_date, lot.end_date);
+          return lotValid || (lot.credits && lot.credits.length > 0);
+        });
+
+        const contractValid = isPeriodInYears(contract.start_date, contract.end_date);
+        return contractValid || (contract.lots && contract.lots.length > 0);
+      });
+    }
+
     return { data: processedData, error: null };
   } catch (error: any) {
     console.error("Error in getContracts:", error);
@@ -87,7 +134,7 @@ export const getContracts = async (filters?: ContractFilters) => {
   }
 };
 
-export const getContractById = async (id: string) => {
+export const getContractById = async (id: string, filters?: ContractFilters) => {
   try {
     const { data, error } = await supabase
       .from("contracts")
@@ -136,6 +183,46 @@ export const getContractById = async (id: string) => {
         }))
       }))
     };
+
+    // Apply year filter to detail view
+    if (filters?.selectedYears && filters.selectedYears.length > 0) {
+      const years = filters.selectedYears;
+
+      const isPeriodInYears = (start?: string, end?: string) => {
+        if (!start && !end) return false;
+        const startDate = start ? new Date(start) : null;
+        const endDate = end ? new Date(end) : null;
+        const startYear = startDate ? startDate.getFullYear() : null;
+        const endYear = endDate ? endDate.getFullYear() : null;
+
+        if (!startYear && !endYear) return false;
+
+        return years.some(year => {
+          if (startYear && startYear > year) return false;
+          if (endYear && endYear < year) return false;
+          return true;
+        });
+      };
+
+      // Filter Lots
+      transformedData.lots = transformedData.lots?.filter((lot: any) => {
+        // Filter Credits
+        lot.credits = lot.credits?.filter((credit: any) => {
+          // Filter Invoices
+          credit.invoices = credit.invoices?.filter((invoice: any) => {
+            const invoiceYear = new Date(invoice.invoice_date).getFullYear();
+            return years.includes(invoiceYear);
+          });
+
+          const creditYear = Number(credit.any);
+          const creditValid = years.includes(creditYear);
+          return creditValid || (credit.invoices && credit.invoices.length > 0);
+        });
+
+        const lotValid = isPeriodInYears(lot.start_date, lot.end_date);
+        return lotValid || (lot.credits && lot.credits.length > 0);
+      });
+    }
 
     return { data: transformedData, error: null };
   } catch (error: any) {

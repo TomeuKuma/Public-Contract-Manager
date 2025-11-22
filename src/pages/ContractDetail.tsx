@@ -11,10 +11,13 @@ import { LotList } from "@/components/lots/LotList";
 import { Contract, Lot, Credit, Invoice } from "@/types";
 import { getContractById } from "@/lib/contractService";
 
+import { useFilters } from "@/hooks/useFilters";
+
 const ContractDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { filters } = useFilters();
   const [contract, setContract] = useState<Contract | null>(null);
   const [loading, setLoading] = useState(true);
   const [editContractOpen, setEditContractOpen] = useState(false);
@@ -35,12 +38,12 @@ const ContractDetail = () => {
     if (id) {
       fetchContractDetail();
     }
-  }, [id]);
+  }, [id, filters]);
 
   const fetchContractDetail = async () => {
     setLoading(true);
     try {
-      const { data, error } = await getContractById(id!);
+      const { data, error } = await getContractById(id!, filters);
 
       if (error) throw new Error(error);
 

@@ -9,6 +9,8 @@ import NewContract from "./pages/NewContract";
 import ContractDetail from "./pages/ContractDetail";
 import NotFound from "./pages/NotFound";
 
+import { FilterProvider } from "@/hooks/useFilters";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -16,16 +18,18 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/contractes/nou" element={<NewContract />} />
-          <Route path="/contractes/:id" element={<ContractDetail />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <FilterProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/contractes/nou" element={<NewContract />} />
+            <Route path="/contractes/:id" element={<ContractDetail />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </FilterProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

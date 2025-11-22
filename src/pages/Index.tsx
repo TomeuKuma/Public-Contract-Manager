@@ -8,16 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Plus, Loader2 } from "lucide-react";
 import { getContracts, ContractFilters } from "@/lib/contractService";
 import { useToast } from "@/hooks/use-toast";
+import { useFilters } from "@/hooks/useFilters";
 
 const Index = () => {
   const [contracts, setContracts] = useState<any[]>([]);
-  const [filters, setFilters] = useState<ContractFilters>({
-    search: "",
-    selectedAreas: [],
-    selectedCenters: [],
-    selectedContractTypes: [],
-    selectedAwardProcedures: [],
-  });
+  const { filters } = useFilters();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
@@ -68,10 +63,6 @@ const Index = () => {
     setLoading(false);
   };
 
-  const handleFilterChange = (newFilters: ContractFilters) => {
-    setFilters(newFilters);
-  };
-
   const handleCardClick = (contractId: string) => {
     navigate(`/contractes/${contractId}`);
   };
@@ -84,7 +75,7 @@ const Index = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <div className="flex flex-1 overflow-hidden">
-        <FiltersSidebar onFilterChange={handleFilterChange} />
+        <FiltersSidebar />
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-6">
