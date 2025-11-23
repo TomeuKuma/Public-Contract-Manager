@@ -37,6 +37,7 @@ export const getContracts = async (filters?: ContractFilters) => {
       `)
       .order("created_at", { ascending: false });
 
+
     // Apply area filter
     if (filters?.selectedAreas && filters.selectedAreas.length > 0) {
       query = query.in("contract_areas.area_id", filters.selectedAreas);
@@ -185,6 +186,7 @@ export const getContractById = async (id: string, filters?: ContractFilters) => 
         )
       `)
       .eq("id", id)
+      .order("sort_order", { foreignTable: "lots", ascending: true })
       .single();
 
     if (error) throw error;
@@ -329,6 +331,29 @@ export const deleteContract = async (id: string) => {
     return { error: null };
   } catch (error: any) {
     console.error("Error in deleteContract:", error);
+    return { error: error.message };
+  }
+};
+
+export const updateLotOrder = async (lots: { id: string; sort_order: number; contract_id: string; name: string }[]) => {
+  try {
+    const updates = lots.map(({ id, sort_order, contract_id, name }) => ({
+      id,
+      sort_order,
+      contract_id,
+      name,
+      updated_at: new Date().toISOString(),
+    }));
+
+    const { error } = await supabase
+      .from("lots")
+      .upsert(updates as any, { onConflict: "id" });
+
+    if (error) throw error;
+
+    return { error: null };
+  } catch (error: any) {
+    console.error("Error in updateLotOrder:", error);
     return { error: error.message };
   }
 };

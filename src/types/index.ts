@@ -41,6 +41,7 @@ export interface Lot {
     created_at: string;
     credits?: Credit[];
     credit_real_total?: number;
+    sort_order?: number;
 }
 
 export interface Credit {
