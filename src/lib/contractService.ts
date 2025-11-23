@@ -28,6 +28,10 @@ export const getContracts = async (filters?: ContractFilters) => {
             modificacio_credit,
             credit_recognized_o,
             any
+          ),
+          cpv_codes(
+            code,
+            description_ca
           )
         )
       `)
@@ -56,6 +60,8 @@ export const getContracts = async (filters?: ContractFilters) => {
           (sum: number, credit: any) => sum + ((Number(credit.credit_committed_d) || 0) + (Number(credit.modificacio_credit) || 0) - (Number(credit.credit_recognized_o) || 0)),
           0
         ),
+        cpv_code: lot.cpv_codes?.code,
+        cpv_description: lot.cpv_codes?.description_ca,
       })),
     }));
 
@@ -171,6 +177,10 @@ export const getContractById = async (id: string, filters?: ContractFilters) => 
               *,
               centers(name)
             )
+          ),
+          cpv_codes(
+            code,
+            description_ca
           )
         )
       `)
@@ -197,7 +207,9 @@ export const getContractById = async (id: string, filters?: ContractFilters) => 
             ...invoice,
             centers: invoice.centers // Keep as object/array as returned by Supabase, type definition handles it
           }))
-        }))
+        })),
+        cpv_code: lot.cpv_codes?.code,
+        cpv_description: lot.cpv_codes?.description_ca,
       }))
     };
 

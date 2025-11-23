@@ -56,6 +56,12 @@ export function LotItem({
             <AccordionContent className="px-4 pb-4">
                 <div className="space-y-4 pt-2">
                     {/* Lot Details */}
+                    {lot.cpv_code && (
+                        <div className="mb-4 text-sm">
+                            <span className="font-semibold">CPV:</span> <span className="font-mono">{lot.cpv_code}</span>
+                            {lot.cpv_description && <span className="text-muted-foreground ml-2">- {lot.cpv_description}</span>}
+                        </div>
+                    )}
                     <div className="flex gap-2">
                         <Button size="sm" variant="outline" onClick={() => onEdit(lot)}>
                             <Edit className="h-3 w-3 mr-1" />

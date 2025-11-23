@@ -188,6 +188,58 @@ export type Database = {
         }
         Relationships: []
       }
+      cpv_codes: {
+        Row: {
+          id: string
+          code: string
+          code_numeric: string
+          check_digit: string
+          description_es: string
+          description_ca: string
+          contract_type: string
+          division: string
+          group_code: string
+          class_code: string
+          category_code: string
+          depth_level: number
+          search_vector: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          code: string
+          code_numeric: string
+          check_digit: string
+          description_es: string
+          description_ca: string
+          contract_type: string
+          division: string
+          group_code: string
+          class_code: string
+          category_code: string
+          depth_level: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          code?: string
+          code_numeric?: string
+          check_digit?: string
+          description_es?: string
+          description_ca?: string
+          contract_type?: string
+          division?: string
+          group_code?: string
+          class_code?: string
+          category_code?: string
+          depth_level?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       credits: {
         Row: {
           accounting_document_number: string | null
@@ -300,6 +352,7 @@ export type Database = {
           cif_nif: string | null
           contract_id: string
           cpv: string | null
+          cpv_code_id: string | null
           created_at: string
           email_adjudicatari: string | null
           end_date: string | null
@@ -317,6 +370,7 @@ export type Database = {
           cif_nif?: string | null
           contract_id: string
           cpv?: string | null
+          cpv_code_id?: string | null
           created_at?: string
           end_date?: string | null
           extension_communication_deadline?: string | null
@@ -333,6 +387,7 @@ export type Database = {
           cif_nif?: string | null
           contract_id?: string
           cpv?: string | null
+          cpv_code_id?: string | null
           created_at?: string
           end_date?: string | null
           extension_communication_deadline?: string | null

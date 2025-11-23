@@ -9,6 +9,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { useToast } from "@/hooks/use-toast";
 
 import { Lot } from "@/types";
+import { CPVSelector } from "@/components/cpv/CPVSelector";
+import { CPVCode } from "@/types/cpv.types";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface LotFormDialogProps {
   contractId: string;
@@ -26,7 +32,8 @@ interface LotFormData {
   cif_nif: string;
   start_date: string;
   end_date: string;
-  cpv: string;
+  cpv: string; // Keep for backward compatibility or display
+  cpv_code_id: string;
   extension_start_date: string;
   extension_end_date: string;
   extension_communication_deadline: string;
@@ -35,15 +42,27 @@ interface LotFormData {
 
 export const LotFormDialog = ({ contractId, lot, open, onOpenChange, onSuccess, extendable = false }: LotFormDialogProps) => {
   const { toast } = useToast();
-  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<LotFormData>({
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<LotFormData>({
     defaultValues: lot || {}
   });
   const [loading, setLoading] = useState(false);
+  const [senseLots, setSenseLots] = useState(false);
+  const [cpvOpen, setCpvOpen] = useState(false);
+  const [selectedCpvLabel, setSelectedCpvLabel] = useState(lot?.cpv_code ? `${lot.cpv_code} - ${lot.cpv_description}` : "");
   const isEdit = !!lot;
 
   const startDate = watch("start_date");
   const endDate = watch("end_date");
   const extensionStartDate = watch("extension_start_date");
+
+  const handleSenseLotsChange = (checked: boolean) => {
+    setSenseLots(checked);
+    if (checked) {
+      setValue("name", "Sense lots");
+    } else {
+      setValue("name", "");
+    }
+  };
 
   const onSubmit = async (data: LotFormData) => {
     setLoading(true);
@@ -53,7 +72,8 @@ export const LotFormDialog = ({ contractId, lot, open, onOpenChange, onSuccess, 
         name: data.name,
         awardee: data.awardee || null,
         cif_nif: data.cif_nif || null,
-        cpv: data.cpv || null,
+        cpv: null, // Deprecated, setting to null or keeping old value if needed, but we prefer cpv_code_id
+        cpv_code_id: data.cpv_code_id || null,
         start_date: data.start_date || null,
         end_date: data.end_date || null,
         extension_start_date: extendable ? (data.extension_start_date || null) : null,
@@ -102,32 +122,73 @@ export const LotFormDialog = ({ contractId, lot, open, onOpenChange, onSuccess, 
           <DialogTitle>{isEdit ? "Editar lot" : "Afegir lot"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="flex items-end gap-4">
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="name">Nom del lot *</Label>
+              <Input id="name" {...register("name", { required: true })} disabled={senseLots} />
+            </div>
+            <div className="flex items-center space-x-2 pb-2">
+              <Checkbox id="senseLots" checked={senseLots} onCheckedChange={handleSenseLotsChange} />
+              <Label htmlFor="senseLots">Sense lots</Label>
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="name">Nom del lot *</Label>
-            <Input id="name" {...register("name", { required: true })} />
+            <Label>CPV *</Label>
+            <Popover open={cpvOpen} onOpenChange={setCpvOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" role="combobox" aria-expanded={cpvOpen} className="w-full justify-between font-normal">
+                  {selectedCpvLabel || "Seleccionar CPV..."}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[600px] p-0" align="start">
+                <CPVSelector
+                  className="border-0"
+                  onSelect={(cpv: CPVCode | null) => {
+                    if (cpv) {
+                      setValue("cpv_code_id", cpv.id);
+                      setValue("cpv", cpv.code);
+                      setSelectedCpvLabel(`${cpv.code} - ${cpv.description_ca}`);
+                      setCpvOpen(false);
+                    } else {
+                      setValue("cpv_code_id", "");
+                      setValue("cpv", "");
+                      setSelectedCpvLabel("");
+                    }
+                  }}
+                  selectedId={watch("cpv_code_id")}
+                />
+              </PopoverContent>
+            </Popover>
+            <input type="hidden" {...register("cpv_code_id", { required: true })} />
+            {errors.cpv_code_id && <p className="text-destructive text-sm">El CPV és obligatori</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="awardee">Adjudicatari</Label>
-              <Input id="awardee" {...register("awardee")} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cif_nif">CIF/NIF</Label>
-              <Input id="cif_nif" {...register("cif_nif")} />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="awardee">Adjudicatari</Label>
+            <Input id="awardee" {...register("awardee")} />
           </div>
-
           <div className="space-y-2">
             <Label htmlFor="email_adjudicatari">E-mail de l'adjudicatari</Label>
-            <Input id="email_adjudicatari" type="email" {...register("email_adjudicatari")} />
+            <Input
+              id="email_adjudicatari"
+              type="email"
+              {...register("email_adjudicatari", {
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: "Format d'email invàlid"
+                }
+              })}
+            />
+            {errors.email_adjudicatari && (
+              <p className="text-sm text-destructive">{errors.email_adjudicatari.message as string}</p>
+            )}
           </div>
-
           <div className="space-y-2">
-            <Label htmlFor="cpv">CPV</Label>
-            <Input id="cpv" {...register("cpv")} />
+            <Label htmlFor="cif_nif">CIF/NIF</Label>
+            <Input id="cif_nif" {...register("cif_nif")} />
           </div>
-
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="start_date">Data d'inici</Label>

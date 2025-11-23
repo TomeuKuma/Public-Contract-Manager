@@ -35,6 +35,9 @@ export interface Lot {
     extension_communication_deadline?: string;
     observations?: string;
     cpv?: string;
+    cpv_code_id?: string;
+    cpv_code?: string;
+    cpv_description?: string;
     created_at: string;
     credits?: Credit[];
     credit_real_total?: number;
