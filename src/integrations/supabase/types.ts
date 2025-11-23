@@ -364,6 +364,7 @@ export type Database = {
           observations: string | null
           start_date: string | null
           updated_at: string
+          sort_order: number | null
         }
         Insert: {
           awardee?: string | null
@@ -381,6 +382,7 @@ export type Database = {
           observations?: string | null
           start_date?: string | null
           updated_at?: string
+          sort_order?: number | null
         }
         Update: {
           awardee?: string | null
@@ -398,6 +400,7 @@ export type Database = {
           observations?: string | null
           start_date?: string | null
           updated_at?: string
+          sort_order?: number | null
         }
         Relationships: [
           {

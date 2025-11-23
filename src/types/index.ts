@@ -1,93 +1,36 @@
-export interface Contract {
-    id: string;
-    name: string;
-    dossier_number: string;
-    file_number: string;
-    referencia_interna?: string;
-    tipus_necessitat?: string;
-    contracting_body?: string;
-    contact_responsible?: string;
-    award_procedure?: string;
-    contract_type?: string;
-    purpose?: string;
-    start_date?: string;
-    end_date?: string;
-    extendable: boolean;
-    modifiable: boolean;
-    created_at: string;
+import { Database } from "@/integrations/supabase/types";
+
+export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
+export type Enums<T extends keyof Database['public']['Enums']> = Database['public']['Enums'][T];
+
+export interface Contract extends Tables<'contracts'> {
     areas?: string[];
     centers?: string[];
     lots?: Lot[];
     centers_data?: { id: string; name: string }[];
 }
 
-export interface Lot {
-    id: string;
-    contract_id: string;
-    name: string;
-    awardee: string;
-    email_adjudicatari?: string;
-    cif_nif?: string;
-    start_date?: string;
-    end_date?: string;
-    extension_start_date?: string;
-    extension_end_date?: string;
-    extension_communication_deadline?: string;
-    observations?: string;
-    cpv?: string;
-    cpv_code_id?: string;
-    cpv_code?: string;
-    cpv_description?: string;
-    created_at: string;
+export interface Lot extends Tables<'lots'> {
     credits?: Credit[];
     credit_real_total?: number;
-    sort_order?: number;
+    cpv_code?: string;
+    cpv_description?: string;
+    // Overriding sort_order to be optional in frontend if needed, but it's in Tables now
 }
 
-export interface Credit {
-    id: string;
-    lot_id: string;
-    organic_item: string;
-    program_item: string;
-    economic_item: string;
-    credit_committed_d: number;
-    credit_recognized_o: number;
-    credit_real: number;
-    modificacio_credit: number;
-    percentage_modified?: number;
-    codi_projecte_inversio?: string;
-    projecte_inversio: boolean;
-    accounting_document_number?: string;
-    any: number;
-    created_at: string;
+export interface Credit extends Tables<'credits'> {
     invoices?: Invoice[];
 }
 
-export interface Invoice {
-    id: string;
-    credit_id: string;
-    invoice_number: string;
-    invoice_date: string;
-    base_amount: number;
-    vat_amount: number;
-    total: number;
-    created_at: string;
-    center_id?: string;
+export interface Invoice extends Tables<'invoices'> {
     centers?: {
         name: string;
     };
 }
 
-export interface Area {
-    id: string;
-    name: string;
-}
+export interface Area extends Tables<'areas'> { }
 
-export interface Center {
-    id: string;
-    name: string;
-    area_id: string;
-}
+export interface Center extends Tables<'centers'> { }
 
 export interface ContractFilters {
     search: string;

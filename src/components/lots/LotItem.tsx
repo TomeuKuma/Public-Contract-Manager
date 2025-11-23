@@ -8,6 +8,7 @@ import { CreditList } from "@/components/credits/CreditList";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
+import { memo } from "react";
 
 interface LotItemProps {
     lot: Lot;
@@ -22,7 +23,7 @@ interface LotItemProps {
     onDeleteInvoice: (id: string) => void;
 }
 
-export function LotItem({
+export const LotItem = memo(function LotItem({
     lot,
     contractModifiable,
     onEdit,
@@ -116,4 +117,12 @@ export function LotItem({
             </AccordionItem>
         </div>
     );
-}
+}, (prevProps, nextProps) => {
+    return (
+        prevProps.lot.id === nextProps.lot.id &&
+        prevProps.lot.sort_order === nextProps.lot.sort_order &&
+        prevProps.lot.name === nextProps.lot.name &&
+        prevProps.lot.credit_real_total === nextProps.lot.credit_real_total &&
+        prevProps.contractModifiable === nextProps.contractModifiable
+    );
+});

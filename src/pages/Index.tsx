@@ -9,14 +9,13 @@ import { Plus, Loader2 } from "lucide-react";
 import { getContracts, ContractFilters } from "@/lib/contractService";
 import { useToast } from "@/hooks/use-toast";
 import { useFilters } from "@/hooks/useFilters";
+import { useContracts } from "@/hooks/useContracts";
 
 const Index = () => {
-  const [contracts, setContracts] = useState<any[]>([]);
+  const { contracts, loading, fetchContracts, loadMore, totalCount } = useContracts();
   const { filters } = useFilters();
-  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   useEffect(() => {
     // Check authentication
@@ -43,25 +42,9 @@ const Index = () => {
 
   useEffect(() => {
     if (user) {
-      fetchContracts();
+      fetchContracts(filters, 0);
     }
-  }, [filters, user]);
-
-  const fetchContracts = async () => {
-    setLoading(true);
-    const { data, error } = await getContracts(filters);
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "No s'han pogut carregar els contractes",
-        variant: "destructive",
-      });
-    } else {
-      setContracts(data || []);
-    }
-    setLoading(false);
-  };
+  }, [filters, user, fetchContracts]);
 
   const handleCardClick = (contractId: string) => {
     navigate(`/contractes/${contractId}`);
@@ -93,7 +76,7 @@ const Index = () => {
               </Button>
             </div>
 
-            {loading ? (
+            {loading && contracts.length === 0 ? (
               <div className="flex items-center justify-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
@@ -119,6 +102,25 @@ const Index = () => {
                     onClick={() => handleCardClick(contract.id)}
                   />
                 ))}
+
+                {contracts.length < totalCount && (
+                  <div className="flex justify-center mt-4 pb-8">
+                    <Button
+                      variant="outline"
+                      onClick={() => loadMore(filters)}
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Carregant...
+                        </>
+                      ) : (
+                        "Carregar més contractes"
+                      )}
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </div>

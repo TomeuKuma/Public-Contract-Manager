@@ -1,99 +1,106 @@
 # Gestor de Contractes Públics (IMAS)
 
-Aquest projecte és una aplicació web moderna dissenyada per optimitzar la gestió i el seguiment dels contractes públics de les Administracions. El seu objectiu principal és proporcionar una eina eficient per administrar expedients, visualitzar detalls financers i operatius, i mantenir un control rigorós sobre la informació contractual.
+> **Documentació Tècnica per a Agents d'IA i Desenvolupadors**
+> Aquest document detalla l'arquitectura, model de dades i lògica de negoci del projecte.
 
-## 🎯 Finalitat del Projecte
+## 📋 Visió General
 
-L'aplicació busca centralitzar la informació dels contractes, facilitant als gestors la presa de decisions i el seguiment administratiu. Permet:
-- **Digitalitzar la gestió** d'expedients de contractació.
-- **Millorar la transparència** i l'accés a la informació dels contractes.
-- **Agilitzar els processos** d'alta i consulta d'expedients.
+Aplicació web (SPA) per a la gestió integral de contractes públics de l'IMAS (Institut Mallorquí d'Afers Socials). Permet el seguiment econòmic i administratiu des de l'adjudicació fins a la facturació.
 
-## 🚀 Característiques Principals
-
-- **Autenticació Segura**: Sistema de login per protegir l'accés a la informació sensible.
-- **Dashboard Interactiu**: Vista general amb mètriques i llistats de contractes actius.
-- **Gestió de Contractes**:
-  - Creació de nous contractes amb validació de dades.
-  - **Lots Prorrogables**: Gestió de pròrrogues amb dates i terminis de comunicació.
-  - **Crèdits Modificables**: Càlcul automàtic de percentatges de modificació i crèdit real.
-  - Visualització detallada de cada expedient (lots, crèdits, factures).
-  - Edició i actualització de la informació contractual.
-- **Interfície Moderna**: Disseny net i responsiu per a una millor experiència d'usuari.
+**Objectiu Principal**: Centralitzar la informació contractual, controlar l'execució pressupostària (crèdits i factures) i facilitar la gestió de pròrrogues i modificacions.
 
 ## 🛠️ Stack Tecnològic
 
-El projecte està construït utilitzant tecnologies modernes de desenvolupament web per assegurar rendiment, escalabilitat i mantenibilitat:
+- **Frontend**: React 18 (Vite), TypeScript.
+- **UI Framework**: Tailwind CSS, Shadcn/UI (basat en Radix UI).
+- **Backend (BaaS)**: Supabase (PostgreSQL + Auth + RLS).
+- **Gestió d'Estat**: TanStack Query (React Query) v5.
+- **Formularis**: React Hook Form + Zod.
+- **Drag & Drop**: @dnd-kit (per reordenar lots).
+- **Icones**: Lucide React.
 
-- **Frontend Core**:
-  - [React](https://react.dev/) - Biblioteca per construir interfícies d'usuari.
-  - [Vite](https://vitejs.dev/) - Entorn de desenvolupament i empaquetador ràpid.
-  - [TypeScript](https://www.typescriptlang.org/) - Tipat estàtic per un codi més robust.
+## 🏗️ Arquitectura i Estructura
 
-- **UI & Estils**:
-  - [Tailwind CSS](https://tailwindcss.com/) - Framework d'utilitats CSS.
-  - [Shadcn UI](https://ui.shadcn.com/) - Components d'interfície reutilitzables i accessibles.
-  - [Lucide React](https://lucide.dev/) - Icones vectorials lleugeres.
+El projecte segueix una arquitectura de Single Page Application (SPA) que consumeix directament l'API de Supabase.
 
-- **Gestió d'Estat i Dades**:
-  - [TanStack Query](https://tanstack.com/query/latest) - Gestió d'estat asíncron i caché de dades.
-  - [Supabase](https://supabase.com/) - Backend as a Service (Base de dades, Autenticació).
-
-- **Formularis i Validació**:
-  - [React Hook Form](https://react-hook-form.com/) - Maneig eficient de formularis.
-  - [Zod](https://zod.dev/) - Validació d'esquemes de dades.
-
-## 📂 Estructura del Projecte
+### Estructura de Directoris Clau
 
 ```
 src/
-├── components/         # Components reutilitzables
-│   ├── contracts/      # Components específics de contractes
-│   ├── lots/           # Components específics de lots
-│   ├── credits/        # Components específics de crèdits
-│   ├── invoices/       # Components específics de factures
-│   ├── forms/          # Formularis (Diàlegs)
-│   └── ui/             # Components base (Shadcn)
-├── hooks/              # Custom hooks (useContracts, useLots, etc.)
-├── lib/                # Utilitats, constants i serveis
-├── pages/              # Pàgines principals (Rutes)
-└── types/              # Definicions de tipus TypeScript
+├── components/         # UI Components
+│   ├── contracts/      # ContractCard, ContractList, ContractForm
+│   ├── lots/           # LotList, LotItem (Memoized), LotForm
+│   ├── credits/        # CreditList, CreditItem
+│   └── ui/             # Shadcn primitives (Button, Input, etc.)
+├── hooks/              # Custom Hooks
+│   ├── useContracts.ts # Hook principal (Paginació, CRUD)
+│   ├── useFilters.ts   # Context global de filtres
+│   └── useCPVCodes.ts  # Cerca de codis CPV
+├── lib/                # Core Logic
+│   ├── contractService.ts # SERVEI PRINCIPAL (Supabase Client)
+│   ├── supabase.ts     # Client instanciat
+│   └── utils.ts        # Helpers (cn, formatters)
+├── pages/              # Rutes (React Router)
+│   ├── Index.tsx       # Dashboard principal
+│   └── ContractDetail.tsx # Vista detallada
+└── types/              # TypeScript Definitions
+    └── index.ts        # Tipus derivats de DB (Supabase)
 ```
 
-## 🏁 Començant
+## 💾 Model de Dades (Supabase)
 
-Segueix aquests passos per executar el projecte en el teu entorn local:
+La base de dades és relacional (PostgreSQL). La jerarquia principal és:
 
-### Prerrequisits
-- Node.js (versió 18 o superior recomanada)
-- npm o yarn
+`Contracte` 1:N `Lots` 1:N `Crèdits` 1:N `Factures`
 
-### Instal·lació
+### Entitats Principals
 
-1.  **Clonar el repositori**:
-    ```bash
-    git clone https://github.com/TomeuKuma/Public-Contract-Manager
-    cd expense-manager-imas-main
-    ```
+1.  **Contracts (`contracts`)**:
+    *   Expedient marc. Camps clau: `contract_type`, `award_procedure`, `start_date`, `end_date`.
+    *   Relació M:N amb `areas` i `centers` (taules pivot `contract_areas`, `contract_centers`).
 
-2.  **Instal·lar dependències**:
-    ```bash
-    npm install
-    ```
+2.  **Lots (`lots`)**:
+    *   Unitat d'adjudicació.
+    *   **Drag & Drop**: Camp `sort_order` per mantenir l'ordre visual.
+    *   Relació amb `cpv_codes` (Vocabulari Comú de Contractació).
 
-3.  **Configurar variables d'entorn**:
-    Crea un arxiu `.env` a l'arrel del projecte i afegeix les credencials necessàries (per exemple, connexió a Supabase).
+3.  **Credits (`credits`)**:
+    *   Assignació pressupostària anual per lot.
+    *   Camps clau: `organic_item`, `program_item`, `economic_item`.
+    *   **Càlculs**: `credit_real` (camp calculat o emmagatzemat, veure lògica).
 
-4.  **Executar el servidor de desenvolupament**:
-    ```bash
-    npm run dev
-    ```
+4.  **Invoices (`invoices`)**:
+    *   Factures imputades a un crèdit.
 
-L'aplicació estarà disponible a `http://localhost:8080` (o el port que indiqui la consola).
+## 🧠 Lògica de Negoci i "Gotchas" per a IA
 
-## 📄 Scripts Disponibles
+Si ets una IA modificant aquest codi, tingues en compte:
 
-- `npm run dev`: Inicia el servidor de desenvolupament.
-- `npm run build`: Construeix l'aplicació per a producció.
-- `npm run lint`: Executa el linter per verificar la qualitat del codi.
-- `npm run preview`: Vista prèvia de la build de producció.
+### 1. Optimització de Rendiment (`contractService.ts`)
+*   **Paginació**: `getContracts` utilitza paginació al servidor (`page`, `pageSize`). No intentis carregar tots els contractes de cop.
+*   **Filtrat**: Els filtres de text (`search`), tipus i procediment s'apliquen a nivell de base de dades (Supabase `.eq()` o `.ilike()`).
+*   **Càlculs**: El camp `credit_real_total` es calcula al client (TypeScript) després de rebre les dades de la pàgina actual.
+
+### 2. Drag & Drop
+*   Utilitzem `@dnd-kit`.
+*   El component `LotItem` està **memoitzat** (`React.memo`) per evitar re-renders massius en moure un lot.
+*   En actualitzar l'ordre, s'ha d'enviar `contract_id` i `name` a `updateLotOrder` per complir amb les restriccions d'unicitat de l'operació `upsert`.
+
+### 3. Tipat (TypeScript)
+*   Els tipus a `src/types/index.ts` estenen els tipus generats automàticament per Supabase (`src/integrations/supabase/types.ts`).
+*   **NO** modifiquis manualment les interfícies base si pots regenerar els tipus de Supabase. Si no pots regenerar-los, actualitza `types.ts` manualment amb precaució.
+
+### 4. Build System (Vite)
+*   Configuració de `manualChunks` a `vite.config.ts` per separar llibreries grans (React, Supabase, Radix UI) i millorar la càrrega inicial.
+
+## 🚀 Desenvolupament Local
+
+1.  **Instal·lar**: `npm install`
+2.  **Variables d'entorn**: `.env` amb `VITE_SUPABASE_URL` i `VITE_SUPABASE_PUBLISHABLE_KEY`.
+3.  **Executar**: `npm run dev`
+
+## 🧪 Scripts de Base de Dades
+
+Les migracions es troben a `supabase/migrations`.
+*   `20251123205500_add_lot_sort_order.sql`: Afegeix suport per reordenar lots.
+*   `20251123163000_create_cpv_tables.sql`: Taula de codis CPV.

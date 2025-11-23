@@ -9,7 +9,7 @@ export interface ContractFilters {
   selectedYears: number[];
 }
 
-export const getContracts = async (filters?: ContractFilters) => {
+export const getContracts = async (filters?: ContractFilters, page = 0, pageSize = 50) => {
   try {
     let query = supabase
       .from("contracts")
@@ -34,9 +34,14 @@ export const getContracts = async (filters?: ContractFilters) => {
             description_ca
           )
         )
-      `)
-      .order("created_at", { ascending: false });
+      `, { count: 'exact' });
 
+    // Apply search filter (DB side)
+    if (filters?.search) {
+      const searchTerm = filters.search;
+      // Using ilike for case-insensitive search on multiple columns
+      query = query.or(`name.ilike.%${searchTerm}%,dossier_number.ilike.%${searchTerm}%,file_number.ilike.%${searchTerm}%`);
+    }
 
     // Apply area filter
     if (filters?.selectedAreas && filters.selectedAreas.length > 0) {
@@ -48,11 +53,26 @@ export const getContracts = async (filters?: ContractFilters) => {
       query = query.in("contract_centers.center_id", filters.selectedCenters);
     }
 
-    const { data, error } = await query;
+    // Apply contract type filter (DB side)
+    if (filters?.selectedContractTypes && filters.selectedContractTypes.length > 0) {
+      query = query.in("contract_type", filters.selectedContractTypes);
+    }
+
+    // Apply award procedure filter (DB side)
+    if (filters?.selectedAwardProcedures && filters.selectedAwardProcedures.length > 0) {
+      query = query.in("award_procedure", filters.selectedAwardProcedures);
+    }
+
+    // Pagination
+    const from = page * pageSize;
+    const to = from + pageSize - 1;
+    query = query.range(from, to).order("created_at", { ascending: false });
+
+    const { data, count, error } = await query;
 
     if (error) throw error;
 
-    // Calculate lot totals and apply search filter
+    // Calculate lot totals
     let processedData = data?.map((contract: any) => ({
       ...contract,
       lots: contract.lots?.map((lot: any) => ({
@@ -66,32 +86,8 @@ export const getContracts = async (filters?: ContractFilters) => {
       })),
     }));
 
-    // Apply search filter
-    if (filters?.search) {
-      const searchLower = filters.search.toLowerCase();
-      processedData = processedData?.filter(
-        (contract: any) =>
-          contract.name?.toLowerCase().includes(searchLower) ||
-          contract.file_number?.toLowerCase().includes(searchLower) ||
-          contract.dossier_number?.toLowerCase().includes(searchLower)
-      );
-    }
-
-    // Apply contract type filter
-    if (filters?.selectedContractTypes && filters.selectedContractTypes.length > 0) {
-      processedData = processedData?.filter((contract: any) =>
-        filters.selectedContractTypes.includes(contract.contract_type)
-      );
-    }
-
-    // Apply award procedure filter
-    if (filters?.selectedAwardProcedures && filters.selectedAwardProcedures.length > 0) {
-      processedData = processedData?.filter((contract: any) =>
-        filters.selectedAwardProcedures.includes(contract.award_procedure)
-      );
-    }
-
-    // Apply year filter
+    // Apply year filter (Client side - complex logic remains here for now)
+    // Note: This filters AFTER pagination, which is not ideal but necessary without complex DB logic
     if (filters?.selectedYears && filters.selectedYears.length > 0) {
       const years = filters.selectedYears;
 
@@ -104,7 +100,6 @@ export const getContracts = async (filters?: ContractFilters) => {
 
         if (!startYear && !endYear) return false;
 
-        // Check if any selected year falls within the period [startYear, endYear]
         return years.some(year => {
           if (startYear && startYear > year) return false;
           if (endYear && endYear < year) return false;
@@ -140,21 +135,19 @@ export const getContracts = async (filters?: ContractFilters) => {
             lot.credit_real_total = 0;
           }
 
-          // A lot is valid if it has credits in the selected years OR its period overlaps with selected years
           const lotValid = isPeriodInYears(lot.start_date, lot.end_date);
           return lotValid || (lot.credits && lot.credits.length > 0);
         });
 
-        // A contract is valid if it has valid lots OR its period overlaps with selected years
         const contractValid = isPeriodInYears(contract.start_date, contract.end_date);
         return contractValid || (contract.lots && contract.lots.length > 0);
       });
     }
 
-    return { data: processedData, error: null };
+    return { data: processedData, count, error: null };
   } catch (error: any) {
     console.error("Error in getContracts:", error);
-    return { data: null, error: error.message };
+    return { data: null, count: 0, error: error.message };
   }
 };
 
