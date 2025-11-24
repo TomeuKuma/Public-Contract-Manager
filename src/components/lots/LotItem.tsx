@@ -54,9 +54,26 @@ export const LotItem = memo(function LotItem({
 
     // Calculate total credit committed from all credits
     const totalCreditCommitted = lot.credits?.reduce(
-        (sum, credit) => sum + ((credit.credit_committed_d || 0) + (credit.modificacio_credit || 0)),
+        (sum, credit) => sum + (credit.credit_committed_d || 0),
         0
     ) || 0;
+
+    // Calculate total credit recognized from all credits
+    const totalCreditRecognized = lot.credits?.reduce(
+        (sum, credit) => sum + (credit.credit_recognized_o || 0),
+        0
+    ) || 0;
+
+    // Calculate average execution percentage
+    const avgExecutionPercentage = lot.credits && lot.credits.length > 0
+        ? lot.credits.reduce((sum, credit) => {
+            const committed = credit.credit_committed_d || 0;
+            const recognized = credit.credit_recognized_o || 0;
+            const real = committed - recognized;
+            const percentage = committed !== 0 ? (1 - (real / committed)) * 100 : 0;
+            return sum + percentage;
+        }, 0) / lot.credits.length
+        : 0;
 
     return (
         <div ref={setNodeRef} style={style} className="flex items-start gap-2">
@@ -80,6 +97,12 @@ export const LotItem = memo(function LotItem({
                                     </span>
                                 )}
                             </p>
+                            {lot.cpv_code && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    <span className="font-mono">{lot.cpv_code}</span>
+                                    {lot.cpv_description && <span className="ml-1">- {lot.cpv_description}</span>}
+                                </p>
+                            )}
                         </div>
                         <div className="text-right">
                             <div className="space-y-1">
@@ -90,9 +113,21 @@ export const LotItem = memo(function LotItem({
                                     </span>
                                 </div>
                                 <div className="flex items-center justify-end gap-2">
+                                    <span className="text-xs text-muted-foreground">Reconegut:</span>
+                                    <span className="text-lg font-semibold text-primary">
+                                        {formatCurrency(totalCreditRecognized)}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-end gap-2">
                                     <span className="text-xs text-muted-foreground">Real:</span>
                                     <span className="text-lg font-semibold text-primary">
                                         {formatCurrency(lot.credit_real_total)}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-end gap-2">
+                                    <span className="text-xs text-muted-foreground">Executat %:</span>
+                                    <span className="text-lg font-semibold text-primary">
+                                        {avgExecutionPercentage.toFixed(2)}%
                                     </span>
                                 </div>
                             </div>
@@ -101,13 +136,6 @@ export const LotItem = memo(function LotItem({
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
                     <div className="space-y-4 pt-2">
-                        {/* Lot Details */}
-                        {lot.cpv_code && (
-                            <div className="mb-4 text-sm">
-                                <span className="font-semibold">CPV:</span> <span className="font-mono">{lot.cpv_code}</span>
-                                {lot.cpv_description && <span className="text-muted-foreground ml-2">- {lot.cpv_description}</span>}
-                            </div>
-                        )}
                         <TooltipProvider>
                             <div className="flex gap-1">
                                 <Tooltip>
@@ -148,6 +176,7 @@ export const LotItem = memo(function LotItem({
             </AccordionItem>
         </div>
     );
+
 }, (prevProps, nextProps) => {
     return (
         prevProps.lot.id === nextProps.lot.id &&

@@ -11,7 +11,7 @@ interface Lot {
   credit_committed_total?: number;
   credits?: {
     credit_committed_d?: number;
-    modificacio_credit?: number;
+    credit_recognized_o?: number;
   }[];
 }
 
@@ -68,13 +68,49 @@ const ContractCard = ({ contract, onClick }: ContractCardProps) => {
     (sum, lot) => {
       // Calculate from credits if available, otherwise use credit_committed_total if it exists
       const lotCommitted = lot.credits?.reduce(
-        (creditSum, credit) => creditSum + ((credit.credit_committed_d || 0) + (credit.modificacio_credit || 0)),
+        (creditSum, credit) => creditSum + (credit.credit_committed_d || 0),
         0
       ) || lot.credit_committed_total || 0;
       return sum + lotCommitted;
     },
     0
   ) || 0;
+
+  const totalCreditRecognized = contract.lots?.reduce(
+    (sum, lot) => {
+      const lotRecognized = lot.credits?.reduce(
+        (creditSum, credit) => creditSum + (credit.credit_recognized_o || 0),
+        0
+      ) || 0;
+      return sum + lotRecognized;
+    },
+    0
+  ) || 0;
+
+  // Calculate Contract Execution Percentage
+  // 1. Calculate Lot Exec % for each lot (average of its credits)
+  // 2. Calculate Contract Exec % (average of Lot Exec %)
+  const executionPercentage = (() => {
+    if (!contract.lots || contract.lots.length === 0) return 0;
+
+    const lotPercentages = contract.lots.map(lot => {
+      if (!lot.credits || lot.credits.length === 0) return 0;
+
+      const creditPercentages = lot.credits.map(credit => {
+        const committed = credit.credit_committed_d || 0;
+        const recognized = credit.credit_recognized_o || 0;
+        const real = committed - recognized;
+        // Executat % = (1 - Real / Compromès) * 100
+        return committed !== 0 ? (1 - (real / committed)) * 100 : 0;
+      });
+
+      const lotTotal = creditPercentages.reduce((sum, p) => sum + p, 0);
+      return lotTotal / creditPercentages.length;
+    });
+
+    const contractTotal = lotPercentages.reduce((sum, p) => sum + p, 0);
+    return contractTotal / lotPercentages.length;
+  })();
 
   return (
     <Card
@@ -153,8 +189,16 @@ const ContractCard = ({ contract, onClick }: ContractCardProps) => {
               <span className="font-semibold">{formatCurrency(totalCreditCommitted)}</span>
             </div>
             <div>
+              <span className="text-muted-foreground">Reconegut: </span>
+              <span className="font-semibold">{formatCurrency(totalCreditRecognized)}</span>
+            </div>
+            <div>
               <span className="text-muted-foreground">Real: </span>
               <span className="font-semibold">{formatCurrency(totalCreditReal)}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Executat %: </span>
+              <span className="font-semibold">{executionPercentage.toFixed(2)}%</span>
             </div>
           </div>
         </div>

@@ -40,99 +40,93 @@ export function CreditList({
 
             {credits && credits.length > 0 ? (
                 <Accordion type="single" collapsible className="space-y-2">
-                    {credits.map((credit) => (
-                        <AccordionItem key={credit.id} value={credit.id} className="border rounded">
-                            <AccordionTrigger className="px-3 py-2 hover:no-underline">
-                                <div className="flex items-center justify-between w-full pr-2">
-                                    <div className="text-left text-sm">
-                                        <span className="font-medium">
-                                            {credit.any} - {credit.organic_item || "-"} / {credit.program_item || "-"} /{" "}
-                                            {credit.economic_item || "-"}
-                                        </span>
-                                    </div>
-                                    <div className="text-right text-sm space-y-1">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs text-muted-foreground">Compromès:</span>
-                                            <span className="font-semibold">{formatCurrency((credit.credit_committed_d || 0) + (credit.modificacio_credit || 0))}</span>
+                    {credits.map((credit) => {
+                        // Determine background color based on flags
+                        let bgColor = "";
+                        if (credit.modificacio && credit.prorroga) {
+                            bgColor = "bg-purple-50 border-purple-200";
+                        } else if (credit.modificacio) {
+                            bgColor = "bg-red-50 border-red-200";
+                        } else if (credit.prorroga) {
+                            bgColor = "bg-blue-50 border-blue-200";
+                        }
+
+                        return (
+                            <AccordionItem key={credit.id} value={credit.id} className={`border rounded ${bgColor}`}>
+                                <AccordionTrigger className="px-3 py-2 hover:no-underline">
+                                    <div className="flex items-center justify-between w-full pr-2">
+                                        <div className="text-left text-sm">
+                                            <span className="font-medium">
+                                                {credit.any} - {credit.organic_item || "-"} / {credit.program_item || "-"} /{" "}
+                                                {credit.economic_item || "-"}
+                                            </span>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs text-muted-foreground">Real:</span>
-                                            <span className="font-semibold">{formatCurrency((credit.credit_committed_d || 0) + (credit.modificacio_credit || 0) - (credit.credit_recognized_o || 0))}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="px-3 pb-3">
-                                <div className="space-y-3 pt-2">
-                                    <div className={`grid ${(modifiable || (credit.modificacio_credit && credit.modificacio_credit !== 0)) ? "grid-cols-5" : "grid-cols-3"} gap-2 text-xs`}>
-                                        <div>
-                                            <p className="text-muted-foreground">Crèdit compromès:</p>
-                                            <p className="font-medium">{formatCurrency(credit.credit_committed_d)}</p>
-                                        </div>
-                                        {(modifiable || (credit.modificacio_credit && credit.modificacio_credit !== 0)) && (
-                                            <>
-                                                <div>
-                                                    <p className="text-muted-foreground">Modificació:</p>
-                                                    <p className="font-medium">{formatCurrency(credit.modificacio_credit || 0)}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-muted-foreground">% Modificat:</p>
-                                                    <p className="font-medium">{credit.percentage_modified || 0}%</p>
-                                                </div>
-                                            </>
-                                        )}
-                                        <div>
-                                            <p className="text-muted-foreground">Crèdit reconegut:</p>
-                                            <p className="font-medium">{formatCurrency(credit.credit_recognized_o)}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-muted-foreground">Crèdit real:</p>
-                                            <p className="font-medium">{formatCurrency((credit.credit_committed_d || 0) + (credit.modificacio_credit || 0) - (credit.credit_recognized_o || 0))}</p>
-                                        </div>
-                                        {credit.projecte_inversio && (
-                                            <div className="col-span-full">
-                                                <Badge variant="secondary" className="mt-1">
-                                                    Projecte d'inversió: {credit.codi_projecte_inversio}
-                                                </Badge>
+                                        <div className="text-right text-sm space-y-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs text-muted-foreground">Compromès:</span>
+                                                <span className="font-semibold">{formatCurrency(credit.credit_committed_d || 0)}</span>
                                             </div>
-                                        )}
-                                    </div>
-
-                                    <TooltipProvider>
-                                        <div className="flex gap-1">
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button size="icon" variant="ghost" onClick={() => onEdit(credit)}>
-                                                        <Pencil className="h-3.5 w-3.5" />
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <p>Editar crèdit</p>
-                                                </TooltipContent>
-                                            </Tooltip>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button size="icon" variant="ghost" onClick={() => onDelete(credit.id)} className="text-destructive hover:text-destructive">
-                                                        <Trash2 className="h-3.5 w-3.5" />
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <p>Eliminar crèdit</p>
-                                                </TooltipContent>
-                                            </Tooltip>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs text-muted-foreground">Reconegut:</span>
+                                                <span className="font-semibold">{formatCurrency(credit.credit_recognized_o || 0)}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs text-muted-foreground">Real:</span>
+                                                <span className="font-semibold">{formatCurrency((credit.credit_committed_d || 0) - (credit.credit_recognized_o || 0))}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs text-muted-foreground">Executat %:</span>
+                                                <span className="font-semibold">
+                                                    {(() => {
+                                                        const committed = credit.credit_committed_d || 0;
+                                                        const recognized = credit.credit_recognized_o || 0;
+                                                        const real = committed - recognized;
+                                                        const percentage = committed !== 0 ? (1 - (real / committed)) * 100 : 0;
+                                                        return `${percentage.toFixed(2)}%`;
+                                                    })()}
+                                                </span>
+                                            </div>
                                         </div>
-                                    </TooltipProvider>
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="px-3 pb-3">
+                                    <div className="space-y-3 pt-2">
+                                        <TooltipProvider>
+                                            <div className="flex gap-1">
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button size="icon" variant="ghost" onClick={() => onEdit(credit)}>
+                                                            <Pencil className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>Editar crèdit</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button size="icon" variant="ghost" onClick={() => onDelete(credit.id)} className="text-destructive hover:text-destructive">
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>Eliminar crèdit</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </div>
+                                        </TooltipProvider>
 
-                                    <InvoiceList
-                                        invoices={credit.invoices || []}
-                                        onAdd={() => onAddInvoice(credit.id)}
-                                        onEdit={onEditInvoice}
-                                        onDelete={onDeleteInvoice}
-                                    />
-                                </div>
-                            </AccordionContent>
-                        </AccordionItem>
-                    ))}
+                                        <InvoiceList
+                                            invoices={credit.invoices || []}
+                                            onAdd={() => onAddInvoice(credit.id)}
+                                            onEdit={onEditInvoice}
+                                            onDelete={onDeleteInvoice}
+                                        />
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
+                        );
+                    })}
                 </Accordion>
             ) : (
                 <p className="text-xs text-muted-foreground text-center py-2">

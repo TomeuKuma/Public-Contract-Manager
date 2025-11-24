@@ -21,6 +21,8 @@ export interface Lot extends Tables<'lots'> {
 
 export interface Credit extends Tables<'credits'> {
     invoices?: Invoice[];
+    modificacio?: boolean;
+    prorroga?: boolean;
 }
 
 export interface Invoice extends Tables<'invoices'> {
