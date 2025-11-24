@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { LogOut, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -15,6 +15,7 @@ import {
 
 const Header = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
   const handleLogout = async () => {
@@ -26,20 +27,40 @@ const Header = () => {
     navigate("/auth");
   };
 
-
+  const isActive = (path: string) => location.pathname === path;
 
   return (
     <header className="border-b bg-card">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-            <span className="text-lg font-bold text-primary-foreground">IMAS</span>
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+              <span className="text-lg font-bold text-primary-foreground">IMAS</span>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-foreground">Gestió de despesa IMAS</h1>
+              <p className="text-sm text-muted-foreground">Sistema de gestió de contractes</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Gestió de despesa IMAS</h1>
-            <p className="text-sm text-muted-foreground">Sistema de gestió de contractes</p>
-          </div>
+
+          <nav className="flex items-center gap-2">
+            <Button
+              variant={isActive("/") ? "default" : "ghost"}
+              onClick={() => navigate("/")}
+              className="font-medium"
+            >
+              Contractes públics
+            </Button>
+            <Button
+              variant={isActive("/exploitation") ? "default" : "ghost"}
+              onClick={() => navigate("/exploitation")}
+              className="font-medium"
+            >
+              Explotació de dades
+            </Button>
+          </nav>
         </div>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="icon">
