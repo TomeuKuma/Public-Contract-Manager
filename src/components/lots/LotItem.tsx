@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Pencil, Trash2 } from "lucide-react";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Lot, Credit, Invoice } from "@/types";
 import { formatCurrency } from "@/lib/formatters";
@@ -91,16 +92,30 @@ export const LotItem = memo(function LotItem({
                                 {lot.cpv_description && <span className="text-muted-foreground ml-2">- {lot.cpv_description}</span>}
                             </div>
                         )}
-                        <div className="flex gap-2">
-                            <Button size="sm" variant="outline" onClick={() => onEdit(lot)}>
-                                <Edit className="h-3 w-3 mr-1" />
-                                Editar lot
-                            </Button>
-                            <Button size="sm" variant="destructive" onClick={() => onDelete(lot.id)}>
-                                <Trash2 className="h-3 w-3 mr-1" />
-                                Eliminar lot
-                            </Button>
-                        </div>
+                        <TooltipProvider>
+                            <div className="flex gap-1">
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button size="icon" variant="ghost" onClick={() => onEdit(lot)}>
+                                            <Pencil className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Editar lot</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button size="icon" variant="ghost" onClick={() => onDelete(lot.id)} className="text-destructive hover:text-destructive">
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Eliminar lot</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </div>
+                        </TooltipProvider>
 
                         <CreditList
                             credits={lot.credits || []}

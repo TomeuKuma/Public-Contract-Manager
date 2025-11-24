@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, Plus } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Pencil, Trash2, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { ca } from "date-fns/locale";
 import { Invoice } from "@/types";
@@ -43,16 +44,30 @@ export function InvoiceList({ invoices, onEdit, onDelete, onAdd }: InvoiceListPr
                                     <p className="font-semibold">{formatCurrency(invoice.total)}</p>
                                 </div>
                             </div>
-                            <div className="flex gap-2">
-                                <Button size="sm" variant="outline" onClick={() => onEdit(invoice)}>
-                                    <Edit className="h-3 w-3 mr-1" />
-                                    Editar
-                                </Button>
-                                <Button size="sm" variant="destructive" onClick={() => onDelete(invoice.id)}>
-                                    <Trash2 className="h-3 w-3 mr-1" />
-                                    Eliminar
-                                </Button>
-                            </div>
+                            <TooltipProvider>
+                                <div className="flex gap-1">
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button size="icon" variant="ghost" onClick={() => onEdit(invoice)}>
+                                                <Pencil className="h-3.5 w-3.5" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Editar factura</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button size="icon" variant="ghost" onClick={() => onDelete(invoice.id)} className="text-destructive hover:text-destructive">
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Eliminar factura</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </div>
+                            </TooltipProvider>
                         </div>
                     ))}
                 </div>

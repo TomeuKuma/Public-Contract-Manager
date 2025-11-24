@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, Plus } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Pencil, Trash2, Plus } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Credit, Invoice } from "@/types";
 import { formatCurrency } from "@/lib/formatters";
@@ -90,16 +91,30 @@ export function CreditList({
                                         )}
                                     </div>
 
-                                    <div className="flex gap-2">
-                                        <Button size="sm" variant="outline" onClick={() => onEdit(credit)}>
-                                            <Edit className="h-3 w-3 mr-1" />
-                                            Editar
-                                        </Button>
-                                        <Button size="sm" variant="destructive" onClick={() => onDelete(credit.id)}>
-                                            <Trash2 className="h-3 w-3 mr-1" />
-                                            Eliminar
-                                        </Button>
-                                    </div>
+                                    <TooltipProvider>
+                                        <div className="flex gap-1">
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button size="icon" variant="ghost" onClick={() => onEdit(credit)}>
+                                                        <Pencil className="h-3.5 w-3.5" />
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>Editar crèdit</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button size="icon" variant="ghost" onClick={() => onDelete(credit.id)} className="text-destructive hover:text-destructive">
+                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>Eliminar crèdit</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </div>
+                                    </TooltipProvider>
 
                                     <InvoiceList
                                         invoices={credit.invoices || []}

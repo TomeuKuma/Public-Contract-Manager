@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, X } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Pencil, Trash2, X } from "lucide-react";
 import { format } from "date-fns";
 import { ca } from "date-fns/locale";
 import { Contract } from "@/types";
@@ -18,19 +19,33 @@ export function ContractHeader({ contract, onEdit, onDelete, onClose }: Contract
             {/* Header */}
             <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between z-10">
                 <h2 className="text-xl font-semibold">{contract.name}</h2>
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={onEdit}>
-                        <Edit className="h-4 w-4 mr-2" />
-                        Editar
-                    </Button>
-                    <Button variant="destructive" size="sm" onClick={onDelete}>
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Eliminar
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={onClose}>
-                        <X className="h-5 w-5" />
-                    </Button>
-                </div>
+                <TooltipProvider>
+                    <div className="flex items-center gap-1">
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" onClick={onEdit}>
+                                    <Pencil className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Editar contracte</p>
+                            </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" onClick={onDelete} className="text-destructive hover:text-destructive">
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Eliminar contracte</p>
+                            </TooltipContent>
+                        </Tooltip>
+                        <Button variant="ghost" size="icon" onClick={onClose}>
+                            <X className="h-5 w-5" />
+                        </Button>
+                    </div>
+                </TooltipProvider>
             </div>
 
             {/* Content */}
