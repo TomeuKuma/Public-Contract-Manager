@@ -50,8 +50,15 @@ export function CreditList({
                                             {credit.economic_item || "-"}
                                         </span>
                                     </div>
-                                    <div className="text-right text-sm">
-                                        <p className="font-semibold">{formatCurrency((credit.credit_committed_d || 0) + (credit.modificacio_credit || 0) - (credit.credit_recognized_o || 0))}</p>
+                                    <div className="text-right text-sm space-y-1">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs text-muted-foreground">Compromès:</span>
+                                            <span className="font-semibold">{formatCurrency((credit.credit_committed_d || 0) + (credit.modificacio_credit || 0))}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs text-muted-foreground">Real:</span>
+                                            <span className="font-semibold">{formatCurrency((credit.credit_committed_d || 0) + (credit.modificacio_credit || 0) - (credit.credit_recognized_o || 0))}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </AccordionTrigger>

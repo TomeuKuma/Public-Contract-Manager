@@ -13,6 +13,7 @@ export interface Contract extends Tables<'contracts'> {
 export interface Lot extends Tables<'lots'> {
     credits?: Credit[];
     credit_real_total?: number;
+    credit_committed_total?: number;
     cpv_code?: string;
     cpv_description?: string;
     // Overriding sort_order to be optional in frontend if needed, but it's in Tables now

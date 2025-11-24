@@ -8,6 +8,11 @@ interface Lot {
   id: string;
   name: string;
   credit_real_total?: number;
+  credit_committed_total?: number;
+  credits?: {
+    credit_committed_d?: number;
+    modificacio_credit?: number;
+  }[];
 }
 
 interface Contract {
@@ -56,6 +61,18 @@ const ContractCard = ({ contract, onClick }: ContractCardProps) => {
 
   const totalCreditReal = contract.lots?.reduce(
     (sum, lot) => sum + (lot.credit_real_total || 0),
+    0
+  ) || 0;
+
+  const totalCreditCommitted = contract.lots?.reduce(
+    (sum, lot) => {
+      // Calculate from credits if available, otherwise use credit_committed_total if it exists
+      const lotCommitted = lot.credits?.reduce(
+        (creditSum, credit) => creditSum + ((credit.credit_committed_d || 0) + (credit.modificacio_credit || 0)),
+        0
+      ) || lot.credit_committed_total || 0;
+      return sum + lotCommitted;
+    },
     0
   ) || 0;
 
@@ -130,8 +147,15 @@ const ContractCard = ({ contract, onClick }: ContractCardProps) => {
           </div>
         )}
         <div className="mt-4 flex justify-end">
-          <div className="text-sm font-semibold">
-            Total: {formatCurrency(totalCreditReal)}
+          <div className="text-sm text-right space-y-1">
+            <div>
+              <span className="text-muted-foreground">Compromès: </span>
+              <span className="font-semibold">{formatCurrency(totalCreditCommitted)}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Real: </span>
+              <span className="font-semibold">{formatCurrency(totalCreditReal)}</span>
+            </div>
           </div>
         </div>
       </CardContent>

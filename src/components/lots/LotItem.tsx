@@ -52,6 +52,12 @@ export const LotItem = memo(function LotItem({
         position: "relative" as const,
     };
 
+    // Calculate total credit committed from all credits
+    const totalCreditCommitted = lot.credits?.reduce(
+        (sum, credit) => sum + ((credit.credit_committed_d || 0) + (credit.modificacio_credit || 0)),
+        0
+    ) || 0;
+
     return (
         <div ref={setNodeRef} style={style} className="flex items-start gap-2">
             <div
@@ -76,10 +82,20 @@ export const LotItem = memo(function LotItem({
                             </p>
                         </div>
                         <div className="text-right">
-                            <p className="text-lg font-semibold text-primary">
-                                {formatCurrency(lot.credit_real_total)}
-                            </p>
-                            <p className="text-xs text-muted-foreground">Crèdit real</p>
+                            <div className="space-y-1">
+                                <div className="flex items-center justify-end gap-2">
+                                    <span className="text-xs text-muted-foreground">Compromès:</span>
+                                    <span className="text-lg font-semibold text-primary">
+                                        {formatCurrency(totalCreditCommitted)}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-end gap-2">
+                                    <span className="text-xs text-muted-foreground">Real:</span>
+                                    <span className="text-lg font-semibold text-primary">
+                                        {formatCurrency(lot.credit_real_total)}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </AccordionTrigger>
