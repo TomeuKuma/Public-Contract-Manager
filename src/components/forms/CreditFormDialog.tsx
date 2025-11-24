@@ -30,11 +30,11 @@ interface CreditFormData {
   credit_committed_d: string;
   credit_recognized_o: string;
   credit_real: string;
-  modificacio_credit: string;
+  modificacio: boolean;
+  prorroga: boolean;
   projecte_inversio: boolean;
   codi_projecte_inversio: string;
   accounting_document_number: string;
-  percentage_modified: number;
 }
 
 export const CreditFormDialog = ({ lotId, lot, credit, open, onOpenChange, onSuccess, modifiable = false }: CreditFormDialogProps) => {
@@ -62,8 +62,8 @@ export const CreditFormDialog = ({ lotId, lot, credit, open, onOpenChange, onSuc
       credit_committed_d: credit.credit_committed_d.toString(),
       credit_recognized_o: credit.credit_recognized_o.toString(),
       credit_real: credit.credit_real.toString(),
-      modificacio_credit: credit.modificacio_credit.toString(),
-      percentage_modified: credit.percentage_modified || 0,
+      modificacio: credit.modificacio || false,
+      prorroga: credit.prorroga || false,
       projecte_inversio: credit.projecte_inversio,
       codi_projecte_inversio: credit.codi_projecte_inversio || "",
       accounting_document_number: credit.accounting_document_number || "",
@@ -72,8 +72,8 @@ export const CreditFormDialog = ({ lotId, lot, credit, open, onOpenChange, onSuc
       economic_item: credit.economic_item,
     } : {
       any: availableYears.length > 0 ? availableYears[0].toString() : new Date().getFullYear().toString(),
-      modificacio_credit: "0",
-      percentage_modified: 0,
+      modificacio: false,
+      prorroga: false,
       projecte_inversio: false,
       codi_projecte_inversio: "",
       credit_committed_d: "0",
@@ -90,7 +90,6 @@ export const CreditFormDialog = ({ lotId, lot, credit, open, onOpenChange, onSuc
 
   const creditCommitted = watch("credit_committed_d");
   const creditRecognized = watch("credit_recognized_o");
-  const modification = watch("modificacio_credit");
   const isInvestmentProject = watch("projecte_inversio");
   const selectedYear = watch("any");
 
@@ -103,37 +102,21 @@ export const CreditFormDialog = ({ lotId, lot, credit, open, onOpenChange, onSuc
   useEffect(() => {
     const committed = typeof creditCommitted === 'string' ? parseFloat(creditCommitted) : (creditCommitted || 0);
     const recognized = typeof creditRecognized === 'string' ? parseFloat(creditRecognized) : (creditRecognized || 0);
-    const mod = typeof modification === 'string' ? parseFloat(modification) : (modification || 0);
 
-    // Calculate Percentage
-    if (modifiable) {
-      const percentage = calculatePercentageModified(mod, committed);
-      setValue("percentage_modified", Number(percentage.toFixed(2)));
-    }
-
-    // Calculate Real Credit
-    // Formula: (Committed + Modification) - Recognized
-    // We use modification if it exists, regardless of modifiable flag, to support cases where data exists but flag changed.
-    const real = calculateCreditReal(committed, mod, recognized);
+    // Calculate Real Credit: Committed - Recognized
+    const real = committed - recognized;
     setValue("credit_real", Number(real.toFixed(2)).toString());
 
-  }, [creditCommitted, creditRecognized, modification, modifiable, setValue]);
+  }, [creditCommitted, creditRecognized, setValue]);
 
   const onSubmit = async (data: CreditFormData) => {
     setLoading(true);
     try {
-      // Retrieve modification value: if modifiable is true, use form data; otherwise use existing credit value or 0
-      // Note: data.modificacio_credit might be undefined if the input is not rendered
-      const modification = modifiable && data.modificacio_credit !== undefined
-        ? (parseFloat(data.modificacio_credit) || 0)
-        : (credit?.modificacio_credit || 0);
-
       const committed = parseFloat(data.credit_committed_d) || 0;
       const recognized = parseFloat(data.credit_recognized_o) || 0;
 
-      // Recalculate derived values to ensure consistency
-      const percentage = calculatePercentageModified(modification, committed);
-      const real = calculateCreditReal(committed, modification, recognized);
+      // Calculate real credit: committed - recognized
+      const real = committed - recognized;
 
       const creditData = {
         lot_id: lotId,
@@ -144,8 +127,8 @@ export const CreditFormDialog = ({ lotId, lot, credit, open, onOpenChange, onSuc
         credit_committed_d: committed,
         credit_recognized_o: recognized,
         credit_real: real,
-        percentage_modified: Number(percentage.toFixed(2)),
-        modificacio_credit: modification,
+        modificacio: data.modificacio || false,
+        prorroga: data.prorroga || false,
         accounting_document_number: data.accounting_document_number || null,
         projecte_inversio: data.projecte_inversio || false,
         codi_projecte_inversio: data.projecte_inversio ? data.codi_projecte_inversio : null,
@@ -249,38 +232,12 @@ export const CreditFormDialog = ({ lotId, lot, credit, open, onOpenChange, onSuc
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="accounting_document_number">Núm. D/AD/ADO</Label>
+              <Label htmlFor="accounting_document_number">Núm. doc. comptable</Label>
               <Input id="accounting_document_number" {...register("accounting_document_number")} />
             </div>
           </div>
 
-          {/* Line 3 (Conditional) */}
-          {modifiable && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="modificacio_credit">Modificació de crèdit (€)</Label>
-                <Input
-                  id="modificacio_credit"
-                  type="number"
-                  step="0.01"
-                  placeholder="0,00 €"
-                  {...register("modificacio_credit")}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="percentage_modified">% Modificat</Label>
-                <div className="relative">
-                  <Input
-                    id="percentage_modified"
-                    readOnly
-                    className="bg-muted"
-                    {...register("percentage_modified")}
-                  />
-                  <span className="absolute right-3 top-2.5 text-sm text-muted-foreground">%</span>
-                </div>
-              </div>
-            </div>
-          )}
+
 
           {/* Line 4 */}
           <div className="grid grid-cols-2 gap-4">
@@ -312,7 +269,33 @@ export const CreditFormDialog = ({ lotId, lot, credit, open, onOpenChange, onSuc
             </div>
           </div>
 
-          {/* Line 6 - Investment Project */}
+          {/* Line 6 - Modification and Extension Flags */}
+          <div className="space-y-4 border-t pt-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="modificacio"
+                  checked={watch("modificacio")}
+                  onCheckedChange={(checked) => setValue("modificacio", checked as boolean)}
+                />
+                <label htmlFor="modificacio" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Modificació
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="prorroga"
+                  checked={watch("prorroga")}
+                  onCheckedChange={(checked) => setValue("prorroga", checked as boolean)}
+                />
+                <label htmlFor="prorroga" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Pròrroga
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Line 7 - Investment Project */}
           <div className="space-y-4 border-t pt-4">
             <div className="flex items-center space-x-2">
               <Checkbox

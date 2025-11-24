@@ -25,8 +25,9 @@ export const getContracts = async (filters?: ContractFilters, page = 0, pageSize
           credits(
             credit_real,
             credit_committed_d,
-            modificacio_credit,
             credit_recognized_o,
+            modificacio,
+            prorroga,
             any
           ),
           cpv_codes(
@@ -78,7 +79,7 @@ export const getContracts = async (filters?: ContractFilters, page = 0, pageSize
       lots: contract.lots?.map((lot: any) => ({
         ...lot,
         credit_real_total: lot.credits?.reduce(
-          (sum: number, credit: any) => sum + ((Number(credit.credit_committed_d) || 0) + (Number(credit.modificacio_credit) || 0) - (Number(credit.credit_recognized_o) || 0)),
+          (sum: number, credit: any) => sum + ((Number(credit.credit_committed_d) || 0) - (Number(credit.credit_recognized_o) || 0)),
           0
         ),
         cpv_code: lot.cpv_codes?.code,
@@ -128,7 +129,7 @@ export const getContracts = async (filters?: ContractFilters, page = 0, pageSize
           // Recalculate lot total after filtering credits
           if (lot.credits) {
             lot.credit_real_total = lot.credits.reduce(
-              (sum: number, credit: any) => sum + ((Number(credit.credit_committed_d) || 0) + (Number(credit.modificacio_credit) || 0) - (Number(credit.credit_recognized_o) || 0)),
+              (sum: number, credit: any) => sum + ((Number(credit.credit_committed_d) || 0) - (Number(credit.credit_recognized_o) || 0)),
               0
             );
           } else {
@@ -193,7 +194,7 @@ export const getContractById = async (id: string, filters?: ContractFilters) => 
       lots: data.lots?.map((lot: any) => ({
         ...lot,
         credit_real_total: lot.credits?.reduce(
-          (sum: number, credit: any) => sum + ((Number(credit.credit_committed_d) || 0) + (Number(credit.modificacio_credit) || 0) - (Number(credit.credit_recognized_o) || 0)),
+          (sum: number, credit: any) => sum + ((Number(credit.credit_committed_d) || 0) - (Number(credit.credit_recognized_o) || 0)),
           0
         ),
         credits: lot.credits?.map((credit: any) => ({
@@ -248,7 +249,7 @@ export const getContractById = async (id: string, filters?: ContractFilters) => 
         // Recalculate lot total after filtering credits
         if (lot.credits) {
           lot.credit_real_total = lot.credits.reduce(
-            (sum: number, credit: any) => sum + ((Number(credit.credit_committed_d) || 0) + (Number(credit.modificacio_credit) || 0) - (Number(credit.credit_recognized_o) || 0)),
+            (sum: number, credit: any) => sum + ((Number(credit.credit_committed_d) || 0) - (Number(credit.credit_recognized_o) || 0)),
             0
           );
         } else {

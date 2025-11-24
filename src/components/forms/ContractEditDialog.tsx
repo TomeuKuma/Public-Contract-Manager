@@ -75,7 +75,7 @@ export const ContractEditDialog = ({ contract, open, onOpenChange, onSuccess }: 
         ) || false;
       } else if (field === "modifiable") {
         hasData = contract.lots?.some((lot: any) =>
-          lot.credits?.some((credit: any) => credit.modificacio_credit && credit.modificacio_credit !== 0)
+          lot.credits?.some((credit: any) => credit.modificacio || credit.prorroga)
         ) || false;
       }
 
@@ -144,36 +144,8 @@ export const ContractEditDialog = ({ contract, open, onOpenChange, onSuccess }: 
       }
 
       if (!data.modifiable && contract.modifiable) {
-        // We need to update credits. Since we can't easily do "colA - colB" in one query for all,
-        // and we need to reset modification to 0.
-        // We can fetch all credits for this contract (we have them in contract.lots, but better fetch fresh or use what we have)
-        // Actually, we can iterate over contract.lots and their credits to generate updates.
-        // But it's safer to fetch IDs.
-
-        // For simplicity and performance, let's assume we can iterate the loaded credits.
-        // But wait, if the user added credits in this session, contract.lots might be stale?
-        // No, ContractDetail refreshes on success.
-
-        const updates = [];
-        if (contract.lots) {
-          for (const lot of contract.lots) {
-            if (lot.credits) {
-              for (const credit of lot.credits) {
-                if (credit.modificacio_credit !== 0) {
-                  const newReal = (credit.credit_committed_d || 0) - (credit.credit_recognized_o || 0);
-                  updates.push(
-                    supabase.from("credits").update({
-                      modificacio_credit: 0,
-                      percentage_modified: 0,
-                      credit_real: newReal
-                    }).eq("id", credit.id)
-                  );
-                }
-              }
-            }
-          }
-        }
-        await Promise.all(updates);
+        // No cleanup needed - modifications are now represented as separate credit records
+        // with modificacio/prorroga flags
       }
 
       // Update area associations
@@ -319,7 +291,7 @@ export const ContractEditDialog = ({ contract, open, onOpenChange, onSuccess }: 
 
             <div className="space-y-2">
               <Label htmlFor="tipus_necessitat">Tipus de necessitat</Label>
-              <Select onValueChange={(value) => setValue("tipus_necessitat", value)} defaultValue={contract.tipus_necessitat}>
+              <Select onValueChange={(value) => setValue("tipus_necessitat", value as "Puntual" | "Recurrent")} defaultValue={contract.tipus_necessitat}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona un tipus" />
                 </SelectTrigger>
