@@ -31,15 +31,35 @@ const Header = () => {
   return (
     <header className="border-b bg-card">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-            <span className="text-lg font-bold text-primary-foreground">IMAS</span>
+        <div className="flex items-center gap-8">
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
+            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+              <span className="text-lg font-bold text-primary-foreground">IMAS</span>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-foreground">Gestió de despesa IMAS</h1>
+              <p className="text-sm text-muted-foreground">Sistema de gestió de contractes</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Gestió de despesa IMAS</h1>
-            <p className="text-sm text-muted-foreground">Sistema de gestió de contractes</p>
-          </div>
+
+          <nav className="hidden md:flex items-center gap-6">
+            <Button
+              variant="ghost"
+              className="text-base font-medium"
+              onClick={() => navigate("/")}
+            >
+              Contractes públics
+            </Button>
+            <Button
+              variant="ghost"
+              className="text-base font-medium"
+              onClick={() => navigate("/explotacio-dades")}
+            >
+              Explotació de dades
+            </Button>
+          </nav>
         </div>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="icon">

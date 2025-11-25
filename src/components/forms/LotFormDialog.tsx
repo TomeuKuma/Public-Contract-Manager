@@ -30,6 +30,7 @@ interface LotFormData {
   awardee: string;
   email_adjudicatari: string;
   cif_nif: string;
+  formalization_date: string;
   start_date: string;
   end_date: string;
   cpv: string; // Keep for backward compatibility or display
@@ -72,6 +73,7 @@ export const LotFormDialog = ({ contractId, lot, open, onOpenChange, onSuccess, 
         name: data.name,
         awardee: data.awardee || null,
         cif_nif: data.cif_nif || null,
+        formalization_date: data.formalization_date || null,
         cpv: null, // Deprecated, setting to null or keeping old value if needed, but we prefer cpv_code_id
         cpv_code_id: data.cpv_code_id || null,
         start_date: data.start_date || null,
@@ -189,6 +191,12 @@ export const LotFormDialog = ({ contractId, lot, open, onOpenChange, onSuccess, 
             <Label htmlFor="cif_nif">CIF/NIF</Label>
             <Input id="cif_nif" {...register("cif_nif")} />
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="formalization_date">Data de formalització</Label>
+            <Input id="formalization_date" type="date" {...register("formalization_date")} />
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="start_date">Data d'inici</Label>
