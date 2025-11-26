@@ -16,7 +16,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, FileText } from "lucide-react";
+import { PDFExtractionModal } from "@/components/forms/PDFExtractionModal";
+import type { MappedContractData } from "@/hooks/useCatalogMapping";
+
 
 
 
@@ -59,6 +62,8 @@ const NewContract = () => {
 
   const [selectedCenters, setSelectedCenters] = useState<string[]>([]);
   const [duplicateFileNumberError, setDuplicateFileNumberError] = useState(false);
+  const [showPDFModal, setShowPDFModal] = useState(false);
+  const [extractedLots, setExtractedLots] = useState<any[]>([]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -111,6 +116,34 @@ const NewContract = () => {
       ? centers.filter((c) => selectedAreas.includes(c.area_id))
       : centers;
 
+  const handlePDFDataExtracted = (data: MappedContractData) => {
+    // Rellenar campos del contracte
+    setFormData({
+      ...formData,
+      name: data.contract.title,
+      file_number: data.contract.expedient,
+      contract_type: data.contract.contract_type,
+      award_procedure: data.contract.award_procedure,
+      purpose: data.contract.title,
+      referencia_interna: data.contract.internal_reference,
+      contact_responsible: data.contract.contact_responsible,
+      extendable: data.contract.is_extendable,
+      modifiable: data.contract.is_modifiable,
+    });
+
+    // Rellenar áreas y centros
+    setSelectedAreas(data.contract.area_ids);
+    setSelectedCenters(data.contract.center_ids);
+
+    // Guardar lots extraídos
+    setExtractedLots(data.lots);
+
+    toast({
+      title: "Dades importades",
+      description: "Revisa els camps i completa la informació que falta. Els lots s'hauran d'afegir manualment.",
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -138,6 +171,7 @@ const NewContract = () => {
       ...formData,
       areas: selectedAreas,
       centers: selectedCenters,
+      lots: extractedLots,
     };
 
     const { data, error } = await createContract(contractData);
@@ -182,6 +216,18 @@ const NewContract = () => {
             <h1 className="text-3xl font-bold text-foreground">
               Nou Contracte
             </h1>
+          </div>
+
+          {/* Botón para importar desde PDF */}
+          <div className="flex justify-end mb-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowPDFModal(true)}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Importar des de PDF
+            </Button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -471,6 +517,13 @@ const NewContract = () => {
               </Button>
             </div>
           </form>
+
+          {/* Modal de extracción de PDF */}
+          <PDFExtractionModal
+            open={showPDFModal}
+            onClose={() => setShowPDFModal(false)}
+            onDataExtracted={handlePDFDataExtracted}
+          />
         </div>
       </main>
     </div>
