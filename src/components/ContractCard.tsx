@@ -1,37 +1,16 @@
+import { memo, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, FileText, Euro } from "lucide-react";
 import { format } from "date-fns";
 import { ca } from "date-fns/locale";
-
-interface Lot {
-  id: string;
-  name: string;
-  credit_real_total?: number;
-  credit_committed_total?: number;
-  credits?: {
-    credit_committed_d?: number;
-    credit_recognized_o?: number;
-  }[];
-}
-
-interface Contract {
-  id: string;
-  name: string;
-  file_number?: string;
-  dossier_number?: string;
-  start_date?: string;
-  end_date?: string;
-  contract_type?: string;
-  lots?: Lot[];
-}
+import { Contract } from "@/types";
 
 interface ContractCardProps {
   contract: Contract;
   onClick: () => void;
 }
 
-const ContractCard = ({ contract, onClick }: ContractCardProps) => {
+const ContractCard = memo(({ contract, onClick }: ContractCardProps) => {
   const formatCurrency = (amount: number = 0) => {
     return new Intl.NumberFormat("ca-ES", {
       style: "currency",
@@ -59,58 +38,62 @@ const ContractCard = ({ contract, onClick }: ContractCardProps) => {
     }
   };
 
-  const totalCreditReal = contract.lots?.reduce(
-    (sum, lot) => sum + (lot.credit_real_total || 0),
-    0
-  ) || 0;
+  const { totalCreditReal, totalCreditCommitted, totalCreditRecognized, executionPercentage } = useMemo(() => {
+    const real = contract.lots?.reduce(
+      (sum, lot) => sum + (lot.credit_real_total || 0),
+      0
+    ) || 0;
 
-  const totalCreditCommitted = contract.lots?.reduce(
-    (sum, lot) => {
-      // Calculate from credits if available, otherwise use credit_committed_total if it exists
-      const lotCommitted = lot.credits?.reduce(
-        (creditSum, credit) => creditSum + (credit.credit_committed_d || 0),
-        0
-      ) || lot.credit_committed_total || 0;
-      return sum + lotCommitted;
-    },
-    0
-  ) || 0;
+    const committed = contract.lots?.reduce(
+      (sum, lot) => {
+        const lotCommitted = lot.credits?.reduce(
+          (creditSum, credit) => creditSum + (credit.credit_committed_d || 0),
+          0
+        ) || lot.credit_committed_total || 0;
+        return sum + lotCommitted;
+      },
+      0
+    ) || 0;
 
-  const totalCreditRecognized = contract.lots?.reduce(
-    (sum, lot) => {
-      const lotRecognized = lot.credits?.reduce(
-        (creditSum, credit) => creditSum + (credit.credit_recognized_o || 0),
-        0
-      ) || 0;
-      return sum + lotRecognized;
-    },
-    0
-  ) || 0;
+    const recognized = contract.lots?.reduce(
+      (sum, lot) => {
+        const lotRecognized = lot.credits?.reduce(
+          (creditSum, credit) => creditSum + (credit.credit_recognized_o || 0),
+          0
+        ) || 0;
+        return sum + lotRecognized;
+      },
+      0
+    ) || 0;
 
-  // Calculate Contract Execution Percentage
-  // 1. Calculate Lot Exec % for each lot (average of its credits)
-  // 2. Calculate Contract Exec % (average of Lot Exec %)
-  const executionPercentage = (() => {
-    if (!contract.lots || contract.lots.length === 0) return 0;
+    // Calculate Contract Execution Percentage
+    let execPercentage = 0;
+    if (contract.lots && contract.lots.length > 0) {
+      const lotPercentages = contract.lots.map(lot => {
+        if (!lot.credits || lot.credits.length === 0) return 0;
 
-    const lotPercentages = contract.lots.map(lot => {
-      if (!lot.credits || lot.credits.length === 0) return 0;
+        const creditPercentages = lot.credits.map(credit => {
+          const c = credit.credit_committed_d || 0;
+          const r = credit.credit_recognized_o || 0;
+          const re = c - r;
+          return c !== 0 ? (1 - (re / c)) * 100 : 0;
+        });
 
-      const creditPercentages = lot.credits.map(credit => {
-        const committed = credit.credit_committed_d || 0;
-        const recognized = credit.credit_recognized_o || 0;
-        const real = committed - recognized;
-        // Executat % = (1 - Real / Compromès) * 100
-        return committed !== 0 ? (1 - (real / committed)) * 100 : 0;
+        const lotTotal = creditPercentages.reduce((sum, p) => sum + p, 0);
+        return lotTotal / creditPercentages.length;
       });
 
-      const lotTotal = creditPercentages.reduce((sum, p) => sum + p, 0);
-      return lotTotal / creditPercentages.length;
-    });
+      const contractTotal = lotPercentages.reduce((sum, p) => sum + p, 0);
+      execPercentage = contractTotal / lotPercentages.length;
+    }
 
-    const contractTotal = lotPercentages.reduce((sum, p) => sum + p, 0);
-    return contractTotal / lotPercentages.length;
-  })();
+    return {
+      totalCreditReal: real,
+      totalCreditCommitted: committed,
+      totalCreditRecognized: recognized,
+      executionPercentage: execPercentage
+    };
+  }, [contract.lots]);
 
   return (
     <Card
@@ -205,6 +188,6 @@ const ContractCard = ({ contract, onClick }: ContractCardProps) => {
       </CardContent>
     </Card>
   );
-};
+});
 
 export default ContractCard;
