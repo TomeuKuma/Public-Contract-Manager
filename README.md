@@ -1,106 +1,100 @@
-# Gestor de Contractes Públics (IMAS)
+# IMAS Contract Manager
 
-> **Documentació Tècnica per a Agents d'IA i Desenvolupadors**
-> Aquest document detalla l'arquitectura, model de dades i lògica de negoci del projecte.
+Sistema de gestión de contratos públicos para el IMAS (Institut Mallorquí d'Afers Socials). Esta aplicación SPA permite el seguimiento integral del ciclo de vida de los contratos, desde la licitación hasta la facturación.
 
-## 📋 Visió General
+## 🛠️ Tech Stack
 
-Aplicació web (SPA) per a la gestió integral de contractes públics de l'IMAS (Institut Mallorquí d'Afers Socials). Permet el seguiment econòmic i administratiu des de l'adjudicació fins a la facturació.
+-   **Frontend**: React 18 + TypeScript + Vite
+-   **Estilos**: Tailwind CSS + Shadcn/UI + Radix UI
+-   **Estado & Caché**: TanStack Query v5 (React Query)
+-   **Formularios**: React Hook Form + Zod (Validación)
+-   **Backend**: Supabase (PostgreSQL + Auth + RLS + Edge Functions)
+-   **Fechas**: date-fns
 
-**Objectiu Principal**: Centralitzar la informació contractual, controlar l'execució pressupostària (crèdits i factures) i facilitar la gestió de pròrrogues i modificacions.
+## 🏗️ Arquitectura
 
-## 🛠️ Stack Tecnològic
+El proyecto sigue una arquitectura modular basada en características y capas de responsabilidad.
 
-- **Frontend**: React 18 (Vite), TypeScript.
-- **UI Framework**: Tailwind CSS, Shadcn/UI (basat en Radix UI).
-- **Backend (BaaS)**: Supabase (PostgreSQL + Auth + RLS).
-- **Gestió d'Estat**: TanStack Query (React Query) v5.
-- **Formularis**: React Hook Form + Zod.
-- **Drag & Drop**: @dnd-kit (per reordenar lots).
-- **Icones**: Lucide React.
-
-## 🏗️ Arquitectura i Estructura
-
-El projecte segueix una arquitectura de Single Page Application (SPA) que consumeix directament l'API de Supabase.
-
-### Estructura de Directoris Clau
+### Estructura de Directorios
 
 ```
 src/
-├── components/         # UI Components
-│   ├── contracts/      # ContractCard, ContractList, ContractForm
-│   ├── lots/           # LotList, LotItem (Memoized), LotForm
-│   ├── credits/        # CreditList, CreditItem
-│   └── ui/             # Shadcn primitives (Button, Input, etc.)
+├── components/         # Componentes de UI reutilizables
+│   ├── forms/          # Formularios de negocio (Dialogs)
+│   ├── ui/             # Componentes base (Shadcn)
+│   └── ...
 ├── hooks/              # Custom Hooks
-│   ├── useContracts.ts # Hook principal (Paginació, CRUD)
-│   ├── useFilters.ts   # Context global de filtres
-│   └── useCPVCodes.ts  # Cerca de codis CPV
-├── lib/                # Core Logic
-│   ├── contractService.ts # SERVEI PRINCIPAL (Supabase Client)
-│   ├── supabase.ts     # Client instanciat
-│   └── utils.ts        # Helpers (cn, formatters)
-├── pages/              # Rutes (React Router)
-│   ├── Index.tsx       # Dashboard principal
-│   └── ContractDetail.tsx # Vista detallada
-└── types/              # TypeScript Definitions
-    └── index.ts        # Tipus derivats de DB (Supabase)
+│   ├── useContracts.ts # Lógica de contratos (TanStack Query)
+│   ├── useMasterData.ts# Datos maestros (Áreas, Centros)
+│   └── ...
+├── lib/                # Utilidades y configuración
+│   ├── contractService.ts # Servicios de API (Supabase)
+│   ├── schemas.ts      # Esquemas de validación Zod
+│   └── utils.ts        # Helpers generales
+├── pages/              # Vistas principales (Rutas)
+├── types/              # Definiciones de tipos TypeScript (Supabase + Frontend)
+└── integrations/       # Configuración de clientes externos (Supabase)
 ```
 
-## 💾 Model de Dades (Supabase)
+### Patrones Clave
 
-La base de dades és relacional (PostgreSQL). La jerarquia principal és:
+1.  **Server State Management**: Utilizamos **TanStack Query** para todo el estado que proviene del servidor. Evitamos `useEffect` manuales para fetching de datos.
+    *   Uso de `useInfiniteQuery` para listas paginadas.
+    *   Uso de `useQuery` con `staleTime` largo para datos maestros (Áreas, Centros).
+2.  **Validación**: Todos los formularios deben usar **React Hook Form** integrado con **Zod** (`src/lib/schemas.ts`).
+3.  **Base de Datos como Fuente de Verdad**: La lógica de filtrado complejo y agregación se delega a **PostgreSQL** (Vistas y RPCs) siempre que es posible para mantener el frontend ligero.
+4.  **Componentes Puros**: Se prioriza la memoización (`React.memo`, `useMemo`) en componentes de lista como `ContractCard` para evitar re-renders innecesarios.
 
-`Contracte` 1:N `Lots` 1:N `Crèdits` 1:N `Factures`
+## 💾 Modelo de Datos
 
-### Entitats Principals
+La jerarquía de datos es la siguiente:
 
-1.  **Contracts (`contracts`)**:
-    *   Expedient marc. Camps clau: `contract_type`, `award_procedure`, `start_date`, `end_date`.
-    *   Relació M:N amb `areas` i `centers` (taules pivot `contract_areas`, `contract_centers`).
+`Contracte` (Contrato Marco)
+└── `Lots` (Lotes específicos)
+    └── `Credits` (Asignaciones presupuestarias anuales)
+        └── `Factures` (Ejecución real del gasto)
 
-2.  **Lots (`lots`)**:
-    *   Unitat d'adjudicació.
-    *   **Drag & Drop**: Camp `sort_order` per mantenir l'ordre visual.
-    *   Relació amb `cpv_codes` (Vocabulari Comú de Contractació).
+*   **Relaciones**:
+    *   Un Contrato tiene múltiples Lotes.
+    *   Un Lote tiene múltiples Créditos (uno por año/partida).
+    *   Un Crédito tiene múltiples Facturas.
+    *   Contratos <-> Áreas/Centros (Relación N:M).
 
-3.  **Credits (`credits`)**:
-    *   Assignació pressupostària anual per lot.
-    *   Camps clau: `organic_item`, `program_item`, `economic_item`.
-    *   **Càlculs**: `credit_real` (camp calculat o emmagatzemat, veure lògica).
+## 🚀 Setup de Desarrollo
 
-4.  **Invoices (`invoices`)**:
-    *   Factures imputades a un crèdit.
+1.  **Instalar dependencias**:
+    ```bash
+    npm install
+    ```
 
-## 🧠 Lògica de Negoci i "Gotchas" per a IA
+2.  **Configurar Variables de Entorno**:
+    Crear `.env` con:
+    ```env
+    VITE_SUPABASE_URL=tu_url_supabase
+    VITE_SUPABASE_ANON_KEY=tu_key_anonima
+    ```
 
-Si ets una IA modificant aquest codi, tingues en compte:
+3.  **Correr servidor local**:
+    ```bash
+    npm run dev
+    ```
 
-### 1. Optimització de Rendiment (`contractService.ts`)
-*   **Paginació**: `getContracts` utilitza paginació al servidor (`page`, `pageSize`). No intentis carregar tots els contractes de cop.
-*   **Filtrat**: Els filtres de text (`search`), tipus i procediment s'apliquen a nivell de base de dades (Supabase `.eq()` o `.ilike()`).
-*   **Càlculs**: El camp `credit_real_total` es calcula al client (TypeScript) després de rebre les dades de la pàgina actual.
+## 🤖 Guía para Agentes de IA
 
-### 2. Drag & Drop
-*   Utilitzem `@dnd-kit`.
-*   El component `LotItem` està **memoitzat** (`React.memo`) per evitar re-renders massius en moure un lot.
-*   En actualitzar l'ordre, s'ha d'enviar `contract_id` i `name` a `updateLotOrder` per complir amb les restriccions d'unicitat de l'operació `upsert`.
+Si eres un agente de IA encargado de mantener o extender este código, sigue estas reglas estrictas:
 
-### 3. Tipat (TypeScript)
-*   Els tipus a `src/types/index.ts` estenen els tipus generats automàticament per Supabase (`src/integrations/supabase/types.ts`).
-*   **NO** modifiquis manualment les interfícies base si pots regenerar els tipus de Supabase. Si no pots regenerar-los, actualitza `types.ts` manualment amb precaució.
+1.  **No uses `any`**: El proyecto tiene un tipado fuerte. Usa los tipos generados en `src/integrations/supabase/types.ts` o extiende interfaces en `src/types/`.
+2.  **TanStack Query es Mandatorio**: Para cualquier nueva lectura de datos, crea un hook en `src/hooks/` usando `useQuery` o `useMutation`. No uses `fetch` o `supabase.from().select()` directamente en componentes.
+3.  **Validación Zod**: Si creas un formulario, DEBES definir su esquema en `src/lib/schemas.ts`.
+4.  **Optimización SQL**: Si una vista requiere muchos `join` o agregaciones, sugiere crear una `VIEW` o función `RPC` en Supabase en lugar de procesar en JavaScript.
+5.  **Memoización**: Si modificas componentes que se renderizan en listas (como tarjetas o filas de tabla), verifica si necesitan `React.memo`.
 
-### 4. Build System (Vite)
-*   Configuració de `manualChunks` a `vite.config.ts` per separar llibreries grans (React, Supabase, Radix UI) i millorar la càrrega inicial.
+### Scripts Útiles
+-   `npm run lint`: Verificar reglas de linter.
+-   `npm run build`: Construir para producción.
 
-## 🚀 Desenvolupament Local
-
-1.  **Instal·lar**: `npm install`
-2.  **Variables d'entorn**: `.env` amb `VITE_SUPABASE_URL` i `VITE_SUPABASE_PUBLISHABLE_KEY`.
-3.  **Executar**: `npm run dev`
-
-## 🧪 Scripts de Base de Dades
-
-Les migracions es troben a `supabase/migrations`.
-*   `20251123205500_add_lot_sort_order.sql`: Afegeix suport per reordenar lots.
-*   `20251123163000_create_cpv_tables.sql`: Taula de codis CPV.
+## 🔄 Estado Actual (Mejoras Recientes)
+-   [x] Migración a TanStack Query para gestión de contratos.
+-   [x] Implementación de validación Zod en edición de contratos.
+-   [x] Optimización de `ContractCard` con memoización.
+-   [x] Creación de migración SQL para optimización de queries (`supabase/migrations/`).

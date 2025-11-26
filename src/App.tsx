@@ -7,7 +7,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NewContract from "./pages/NewContract";
 import ContractDetail from "./pages/ContractDetail";
-import Exploitation from "./pages/Exploitation";
+import DataExploitation from "./pages/DataExploitation";
 import NotFound from "./pages/NotFound";
 
 import { FilterProvider } from "@/hooks/useFilters";
@@ -26,7 +26,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/contractes/nou" element={<NewContract />} />
             <Route path="/contractes/:id" element={<ContractDetail />} />
-            <Route path="/exploitation" element={<Exploitation />} />
+            <Route path="/explotacio-dades" element={<DataExploitation />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

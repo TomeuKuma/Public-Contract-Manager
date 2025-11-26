@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Contract } from "@/types";
 import { CONTRACTING_BODIES, AWARD_PROCEDURES, CONTRACT_TYPES } from "@/lib/constants";
+import { contractSchema, ContractFormValues } from "@/lib/schemas";
+import { useAreas, useCenters } from "@/hooks/useMasterData";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 interface ContractEditDialogProps {
   contract: Contract;
@@ -21,14 +25,27 @@ interface ContractEditDialogProps {
 
 export const ContractEditDialog = ({ contract, open, onOpenChange, onSuccess }: ContractEditDialogProps) => {
   const { toast } = useToast();
-  const { register, handleSubmit, setValue, watch } = useForm({
+  const { data: areas = [] } = useAreas();
+  const { data: centers = [] } = useCenters();
+
+  const form = useForm<ContractFormValues>({
+    resolver: zodResolver(contractSchema),
     defaultValues: {
-      ...contract,
-      tipus_necessitat: contract.tipus_necessitat || "Puntual"
+      name: contract.name,
+      file_number: contract.file_number || "",
+      dossier_number: contract.dossier_number || "",
+      referencia_interna: contract.referencia_interna || "",
+      tipus_necessitat: (contract.tipus_necessitat as "Puntual" | "Recurrent") || "Puntual",
+      contracting_body: contract.contracting_body || "",
+      contact_responsible: contract.contact_responsible || "",
+      award_procedure: contract.award_procedure || "",
+      contract_type: contract.contract_type || "",
+      purpose: contract.purpose || "",
+      extendable: contract.extendable || false,
+      modifiable: contract.modifiable || false,
     }
   });
-  const [areas, setAreas] = useState<any[]>([]);
-  const [centers, setCenters] = useState<any[]>([]);
+
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [selectedCenters, setSelectedCenters] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -39,17 +56,23 @@ export const ContractEditDialog = ({ contract, open, onOpenChange, onSuccess }: 
 
   useEffect(() => {
     if (open) {
-      fetchAreasAndCenters();
       fetchContractAssociations();
+      form.reset({
+        name: contract.name,
+        file_number: contract.file_number || "",
+        dossier_number: contract.dossier_number || "",
+        referencia_interna: contract.referencia_interna || "",
+        tipus_necessitat: (contract.tipus_necessitat as "Puntual" | "Recurrent") || "Puntual",
+        contracting_body: contract.contracting_body || "",
+        contact_responsible: contract.contact_responsible || "",
+        award_procedure: contract.award_procedure || "",
+        contract_type: contract.contract_type || "",
+        purpose: contract.purpose || "",
+        extendable: contract.extendable || false,
+        modifiable: contract.modifiable || false,
+      });
     }
-  }, [open]);
-
-  const fetchAreasAndCenters = async () => {
-    const { data: areasData } = await supabase.from("areas").select("*");
-    const { data: centersData } = await supabase.from("centers").select("*");
-    setAreas(areasData || []);
-    setCenters(centersData || []);
-  };
+  }, [open, contract]);
 
   const fetchContractAssociations = async () => {
     const { data: areaAssoc } = await supabase
@@ -85,12 +108,12 @@ export const ContractEditDialog = ({ contract, open, onOpenChange, onSuccess }: 
         return;
       }
     }
-    setValue(field, checked);
+    form.setValue(field, checked);
   };
 
   const confirmUncheck = () => {
     if (pendingUncheck) {
-      setValue(pendingUncheck, false);
+      form.setValue(pendingUncheck, false);
       setPendingUncheck(null);
       setWarningOpen(false);
     }
@@ -101,7 +124,7 @@ export const ContractEditDialog = ({ contract, open, onOpenChange, onSuccess }: 
     setWarningOpen(false);
   };
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: ContractFormValues) => {
     setLoading(true);
     try {
       const { error: updateError } = await supabase
@@ -141,11 +164,6 @@ export const ContractEditDialog = ({ contract, open, onOpenChange, onSuccess }: 
             extension_communication_deadline: null
           })
           .eq("contract_id", contract.id);
-      }
-
-      if (!data.modifiable && contract.modifiable) {
-        // No cleanup needed - modifications are now represented as separate credit records
-        // with modificacio/prorroga flags
       }
 
       // Update area associations
@@ -193,196 +211,310 @@ export const ContractEditDialog = ({ contract, open, onOpenChange, onSuccess }: 
           <DialogHeader>
             <DialogTitle>Editar contracte</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nom del contracte *</Label>
-              <Input id="name" {...register("name", { required: true })} />
-            </div>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nom del contracte *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="file_number">Núm. d'expedient</Label>
-                  {duplicateFileNumberError && (
-                    <span className="text-[10px] text-destructive font-medium leading-tight">
-                      Nº d'expedient existent. Modifica o elimina el contracte duplicat abans de poder crear aquest contracte.
-                    </span>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="file_number"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Núm. d'expedient</FormLabel>
+                      <div className="flex flex-col gap-1">
+                        {duplicateFileNumberError && (
+                          <span className="text-[10px] text-destructive font-medium leading-tight">
+                            Nº d'expedient existent. Modifica o elimina el contracte duplicat abans de poder crear aquest contracte.
+                          </span>
+                        )}
+                        <FormControl>
+                          <Input
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              setDuplicateFileNumberError(false);
+                            }}
+                            className={duplicateFileNumberError ? "border-destructive" : ""}
+                          />
+                        </FormControl>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
                   )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="dossier_number"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Núm. de dossier</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="referencia_interna"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Referència interna</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="start_date">Data inici del contracte</Label>
+                  <Input
+                    id="start_date"
+                    value={contract.start_date || "-"}
+                    readOnly
+                    className="bg-muted"
+                  />
                 </div>
-                <Input
-                  id="file_number"
-                  {...register("file_number", {
-                    onChange: () => setDuplicateFileNumberError(false)
-                  })}
-                  className={duplicateFileNumberError ? "border-destructive" : ""}
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="end_date">Data fi del contracte</Label>
+                  <Input
+                    id="end_date"
+                    value={contract.end_date || "-"}
+                    readOnly
+                    className="bg-muted"
+                  />
+                </div>
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="dossier_number">Núm. de dossier</Label>
-                <Input id="dossier_number" {...register("dossier_number")} />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="referencia_interna">Referència interna</Label>
-              <Input id="referencia_interna" {...register("referencia_interna")} />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="start_date">Data inici del contracte</Label>
-                <Input
-                  id="start_date"
-                  value={contract.start_date || "-"}
-                  readOnly
-                  className="bg-muted"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="end_date">Data fi del contracte</Label>
-                <Input
-                  id="end_date"
-                  value={contract.end_date || "-"}
-                  readOnly
-                  className="bg-muted"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Àrees</Label>
-              <div className="border rounded-md p-3 space-y-2 max-h-40 overflow-y-auto">
-                {areas.map(area => (
-                  <div key={area.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      checked={selectedAreas.includes(area.id)}
-                      onCheckedChange={(checked) => {
-                        setSelectedAreas(checked
-                          ? [...selectedAreas, area.id]
-                          : selectedAreas.filter(id => id !== area.id)
-                        );
-                      }}
-                    />
-                    <label className="text-sm">{area.name}</label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Centres</Label>
-              <div className="border rounded-md p-3 space-y-2 max-h-40 overflow-y-auto">
-                {centers.map(center => (
-                  <div key={center.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      checked={selectedCenters.includes(center.id)}
-                      onCheckedChange={(checked) => {
-                        setSelectedCenters(checked
-                          ? [...selectedCenters, center.id]
-                          : selectedCenters.filter(id => id !== center.id)
-                        );
-                      }}
-                    />
-                    <label className="text-sm">{center.name}</label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="tipus_necessitat">Tipus de necessitat</Label>
-              <Select onValueChange={(value) => setValue("tipus_necessitat", value as "Puntual" | "Recurrent")} defaultValue={contract.tipus_necessitat}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un tipus" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Puntual">Puntual</SelectItem>
-                  <SelectItem value="Recurrent">Recurrent</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="contracting_body">Òrgan de contractació</Label>
-              <Select onValueChange={(value) => setValue("contracting_body", value)} defaultValue={contract.contracting_body}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un òrgan" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CONTRACTING_BODIES.map(body => (
-                    <SelectItem key={body} value={body}>{body}</SelectItem>
+                <Label>Àrees</Label>
+                <div className="border rounded-md p-3 space-y-2 max-h-40 overflow-y-auto">
+                  {areas.map(area => (
+                    <div key={area.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={selectedAreas.includes(area.id)}
+                        onCheckedChange={(checked) => {
+                          setSelectedAreas(checked
+                            ? [...selectedAreas, area.id]
+                            : selectedAreas.filter(id => id !== area.id)
+                          );
+                        }}
+                      />
+                      <label className="text-sm">{area.name}</label>
+                    </div>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
+                </div>
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="contact_responsible">Responsable de contacte</Label>
-              <Input id="contact_responsible" {...register("contact_responsible")} />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="award_procedure">Procediment d'adjudicació</Label>
-                <Select onValueChange={(value) => setValue("award_procedure", value)} defaultValue={contract.award_procedure}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona un procediment" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {AWARD_PROCEDURES.map(proc => (
-                      <SelectItem key={proc} value={proc}>{proc}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Centres</Label>
+                <div className="border rounded-md p-3 space-y-2 max-h-40 overflow-y-auto">
+                  {centers.map(center => (
+                    <div key={center.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={selectedCenters.includes(center.id)}
+                        onCheckedChange={(checked) => {
+                          setSelectedCenters(checked
+                            ? [...selectedCenters, center.id]
+                            : selectedCenters.filter(id => id !== center.id)
+                          );
+                        }}
+                      />
+                      <label className="text-sm">{center.name}</label>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="contract_type">Tipus contractual</Label>
-                <Select onValueChange={(value) => setValue("contract_type", value)} defaultValue={contract.contract_type}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona un tipus" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CONTRACT_TYPES.map(type => (
-                      <SelectItem key={type} value={type}>{type}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="purpose">Objecte</Label>
-              <Textarea id="purpose" {...register("purpose")} rows={3} />
-            </div>
+              <FormField
+                control={form.control}
+                name="tipus_necessitat"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipus de necessitat</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona un tipus" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Puntual">Puntual</SelectItem>
+                        <SelectItem value="Recurrent">Recurrent</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <div className="flex gap-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="extendable"
-                  checked={watch("extendable")}
-                  onCheckedChange={(checked) => handleCheckboxChange("extendable", checked as boolean)}
+              <FormField
+                control={form.control}
+                name="contracting_body"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Òrgan de contractació</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona un òrgan" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {CONTRACTING_BODIES.map(body => (
+                          <SelectItem key={body} value={body}>{body}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="contact_responsible"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Responsable de contacte</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="award_procedure"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Procediment d'adjudicació</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona un procediment" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {AWARD_PROCEDURES.map(proc => (
+                            <SelectItem key={proc} value={proc}>{proc}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                <label htmlFor="extendable" className="text-sm">Prorrogable</label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="modifiable"
-                  checked={watch("modifiable")}
-                  onCheckedChange={(checked) => handleCheckboxChange("modifiable", checked as boolean)}
-                />
-                <label htmlFor="modifiable" className="text-sm">Modificable</label>
-              </div>
-            </div>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel·lar
-              </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? "Guardant..." : "Guardar"}
-              </Button>
-            </DialogFooter>
-          </form>
+                <FormField
+                  control={form.control}
+                  name="contract_type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipus contractual</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona un tipus" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {CONTRACT_TYPES.map(type => (
+                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="purpose"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Objecte</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} rows={3} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex gap-4">
+                <FormField
+                  control={form.control}
+                  name="extendable"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={(checked) => handleCheckboxChange("extendable", checked as boolean)}
+                        />
+                      </FormControl>
+                      <FormLabel className="font-normal">
+                        Prorrogable
+                      </FormLabel>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="modifiable"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={(checked) => handleCheckboxChange("modifiable", checked as boolean)}
+                        />
+                      </FormControl>
+                      <FormLabel className="font-normal">
+                        Modificable
+                      </FormLabel>
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                  Cancel·lar
+                </Button>
+                <Button type="submit" disabled={loading}>
+                  {loading ? "Guardant..." : "Guardar"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
 
@@ -406,3 +538,4 @@ export const ContractEditDialog = ({ contract, open, onOpenChange, onSuccess }: 
     </>
   );
 };
+

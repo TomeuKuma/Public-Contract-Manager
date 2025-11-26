@@ -32,8 +32,8 @@ const Header = () => {
   return (
     <header className="border-b bg-card">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center gap-8">
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
             <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
               <span className="text-lg font-bold text-primary-foreground">IMAS</span>
             </div>
@@ -43,18 +43,18 @@ const Header = () => {
             </div>
           </div>
 
-          <nav className="flex items-center gap-2">
+          <nav className="hidden md:flex items-center gap-6">
             <Button
-              variant={isActive("/") ? "default" : "ghost"}
+              variant="ghost"
+              className="text-base font-medium"
               onClick={() => navigate("/")}
-              className="font-medium"
             >
               Contractes públics
             </Button>
             <Button
-              variant={isActive("/exploitation") ? "default" : "ghost"}
-              onClick={() => navigate("/exploitation")}
-              className="font-medium"
+              variant="ghost"
+              className="text-base font-medium"
+              onClick={() => navigate("/explotacio-dades")}
             >
               Explotació de dades
             </Button>

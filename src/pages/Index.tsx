@@ -12,8 +12,8 @@ import { useFilters } from "@/hooks/useFilters";
 import { useContracts } from "@/hooks/useContracts";
 
 const Index = () => {
-  const { contracts, loading, fetchContracts, loadMore, totalCount } = useContracts();
   const { filters } = useFilters();
+  const { contracts, loading, loadMore, totalCount } = useContracts(filters);
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
 
@@ -39,12 +39,6 @@ const Index = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
-
-  useEffect(() => {
-    if (user) {
-      fetchContracts(filters, 0);
-    }
-  }, [filters, user, fetchContracts]);
 
   const handleCardClick = (contractId: string) => {
     navigate(`/contractes/${contractId}`);
@@ -107,7 +101,7 @@ const Index = () => {
                   <div className="flex justify-center mt-4 pb-8">
                     <Button
                       variant="outline"
-                      onClick={() => loadMore(filters)}
+                      onClick={() => loadMore()}
                       disabled={loading}
                     >
                       {loading ? (
