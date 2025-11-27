@@ -311,32 +311,44 @@ export const createContract = async (contractData: any) => {
 
     // Insert lots
     if (contractData.lots && contractData.lots.length > 0) {
-      const lotsToInsert = contractData.lots.map((lot: any, index: number) => {
+      const lotsToInsert = await Promise.all(contractData.lots.map(async (lot: any, index: number) => {
         // Intentar extraer código CPV si existe en la descripción
         // Formato esperado: 45100000-5 o 45100000
         const cpvMatch = lot.cpv_description?.match(/^(\d{8}(-\d)?)/);
-        const cpvCode = cpvMatch ? cpvMatch[0] : null;
+        const cpvCodeStr = cpvMatch ? cpvMatch[0] : null;
+        let cpvCodeId = null;
+
+        if (cpvCodeStr) {
+          // Buscar el ID del código CPV en la base de datos
+          const { data: cpvData } = await supabase
+            .from('cpv_codes')
+            .select('id')
+            .or(`code.eq.${cpvCodeStr},code_numeric.eq.${cpvCodeStr.split('-')[0]}`)
+            .maybeSingle();
+
+          if (cpvData) {
+            cpvCodeId = cpvData.id;
+          }
+        }
 
         return {
           contract_id: newContract.id,
           name: lot.name,
-          // Si tenemos un código CPV potencial, podríamos intentar usarlo, 
-          // pero si no existe en la tabla cpv_codes fallará por FK.
-          // Por seguridad, guardamos la descripción en observaciones si no es un código exacto conocido,
-          // o podríamos dejarlo null y que el usuario lo rellene.
-          // Para este caso, vamos a guardar la descripción completa en observations
-          // y dejar cpv null para evitar errores de FK, a menos que estemos seguros.
-          // Estrategia segura: cpv null, observations = cpv_description
+          // Usamos cpv_code_id como FK principal
           cpv: null,
+          cpv_code_id: cpvCodeId,
           awardee: lot.supplier_name,
           cif_nif: lot.supplier_cif,
           start_date: lot.start_date || null,
           end_date: lot.end_date || null,
           formalization_date: lot.formalization_date || null,
           sort_order: index,
-          observations: lot.cpv_description ? `CPV: ${lot.cpv_description}` : null
+          // Si hemos encontrado el CPV, no hace falta ponerlo en observaciones, 
+          // a menos que queramos conservar la descripción original completa si difiere.
+          // Para limpiar, lo pondremos solo si no se ha encontrado enlace.
+          observations: cpvCodeId ? null : (lot.cpv_description ? `CPV: ${lot.cpv_description}` : null)
         };
-      });
+      }));
 
       const { error: lotsError } = await supabase
         .from("lots")
