@@ -7,13 +7,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
     import.meta.url
 ).toString();
 
-const apiKey = import.meta.env.VITE_GOOGLE_GEMINI_KEY;
-
-if (!apiKey) {
-    console.error('VITE_GOOGLE_GEMINI_KEY is missing in environment variables.');
-}
-
-const genAI = new GoogleGenerativeAI(apiKey || 'DUMMY_KEY'); // Evitar error de inicialización inmediato, fallará al llamar a la API si es dummy
+const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GOOGLE_GEMINI_KEY);
 
 export interface ExtractedContractData {
     contract: {
@@ -95,10 +89,6 @@ export async function extractContractDataFromPDF(
     file: File
 ): Promise<ExtractedContractData> {
     try {
-        if (!apiKey) {
-            throw new Error('API key no encontrada. Asegúrate de tener VITE_GOOGLE_GEMINI_KEY en tu archivo .env y reinicia el servidor de desarrollo.');
-        }
-
         // 1. Extraer texto del PDF
         const pdfText = await extractTextFromPDF(file);
 
@@ -118,55 +108,74 @@ export async function extractContractDataFromPDF(
             },
         });
 
-        const prompt = `
-            Actúa como un experto en contratación pública. Analiza el siguiente texto extraído de un pliego de contratación o documento de adjudicación y extrae los datos estructurados.
-            
-            IMPORTANTE:
-            - Devuelve SOLO un objeto JSON válido. Sin markdown, sin explicaciones.
-            - Si un campo no se encuentra, usa null (o false para booleanos).
-            - Para fechas, usa formato ISO YYYY-MM-DD. Si no hay fecha exacta, null.
-            - Para importes, usa números (sin símbolos de moneda).
-            
-            Estructura JSON requerida:
-            {
-                "contract": {
-                    "expedient": "Número de expediente",
-                    "internal_reference": "Referencia interna o código adicional si existe",
-                    "title": "Título del contrato",
-                    "contract_type": "Tipo de contrato (Servicios, Suministros, Obras, Privado, Patrimonial, Concesión de servicios)",
-                    "award_procedure": "Procedimiento (Abierto, Menor, Basado en acuerdo marco, Negociado sin publicidad, Negociado con publicidad, Abierto simplificado, Abierto supersimplificado, Derivado de sistema dinámico de adquisición, Licitación con negociación, Diálogo competitivo, Asociación para la innovación, Concurso de proyectos, Restringido)",
-                    "award_date": "YYYY-MM-DD (Fecha de adjudicación)",
-                    "contact_responsible": "Nombre de la persona de contacto o responsable si aparece",
-                    "areas": ["Nombre del área solicitante"],
-                    "centers": ["Nombre del centro de coste"],
-                    "is_extendable": boolean (true si se menciona prórroga),
-                    "is_modifiable": boolean (true si se menciona modificación prevista)
-                },
-                "lots": [
-                    {
-                        "name": "Nombre del lote (o 'Lote Único' si no hay lotes)",
-                        "cpv_description": "Código CPV completo (ej: 45233200-1)",
-                        "supplier_name": "Nombre del adjudicatario",
-                        "supplier_cif": "CIF/NIF del adjudicatario",
-                        "formalization_date": "YYYY-MM-DD",
-                        "start_date": "YYYY-MM-DD",
-                        "end_date": "YYYY-MM-DD"
-                    }
-                ]
-            }
+        const prompt = `Eres un experto en contratación pública del IMAS (Institut Mallorquí d'Afers Socials). 
 
-            TEXTO DEL CONTRATO:
-            ${pdfText.substring(0, 30000)} // Limitamos a 30k caracteres para no exceder tokens
-        `;
+A continuación te proporciono el texto completo de una resolución de adjudicación de un contracte público.
+
+Tu tarea es extraer la información estructurada siguiendo EXACTAMENTE este formato JSON:
+
+{
+  "contract": {
+    "expedient": "string (número de expediente de SEGEX,formato: NNNNNNX o NNNNNNNX, ej: 904335X o 1392360J, la numeración siempre empieza por 7,8,9,o 1)",
+    "internal_reference": "string (referencia interna del contracte, formato: YYYY/NNN/XXXX, ej: 2022/143/CSER)",
+    "title": "string (objeto/descripción del contracte)",
+    "contract_type": "string (Obra | Servei | Subministrament | Concessió)",
+    "award_procedure": "string (Contracte obert | Contracte menor AD| Contracte menor ADO)",
+    "award_date": "string (formato ISO: YYYY-MM-DD)",
+    "contact_responsible": "string (nombre del responsable de contrato)",
+    "areas": ["array de strings con nombres de áreas mencionadas, entre las siguientes posibilidades: "Atenció Comunitaria i Promoció de la Autonomia Personal", "Atenció Sociosanitària"],
+    "centers": ["array de strings con nombres completos de centros mencionados, entre las siguientes posibilidades: "Centre de dia Can Clar", "Centre de dia Reina Sofia", "Centre de dia Son Perxana", "CPAP Can Real (Petra)", "CPAP Llar d'Avinguda Argentina", "CPAP Llar de Felanitx", "CPAP Llar de Llucmajor", "CPAP Llar de Manacor", "CPAP Llar Reina Sofia", "CPAP Son Bru (Puigpunyent)", "Oficina d'habitatge (Inca)", "Residència Bartomeu Quetglas", "Residència Huialfàs", "Residència La Bonanova", "Residència Llar dels Ancians", "Residència Miquel Mir", "Residència Oms-Sant Miquel", "Residència Sant Josep", "Residència Son Caulelles", "Servei d'Ajuda Integral a Domicili", "Servei d'Atenció Sociosanitària"],
+    "is_extendable": boolean (true si menciona que puede haber prórroga),
+    "is_modifiable": boolean (true si menciona que puede haber modificación)
+  },
+  "lots": [
+    {
+      "name": "string (nombre del lot o 'Sense lots' si no hay lots explícitos)",
+      "cpv_description": "string (formato 45100000-5 o 45100000)",
+      "supplier_name": "string (nombre de la empresa adjudicataria)",
+      "supplier_cif": "string (CIF/NIF sin espacios ni guiones)",
+      "formalization_date": "string (fecha adjudicación ISO: YYYY-MM-DD)",
+      "start_date": "string (fecha inicio del servei ISO: YYYY-MM-DD)",
+      "end_date": "string (fecha fin del servei ISO: YYYY-MM-DD)",
+    }
+  ]
+}
+
+INSTRUCCIONES CRÍTICAS:
+1. Si NO hay lots explícitos, crea un único lot con name="Sense lots"
+2. Las fechas SIEMPRE en formato ISO (YYYY-MM-DD), convierte del formato catalán/español (dd/mm/yyyy)
+3. Extrae TODOS los lots mencionados si hay múltiples
+4. Para contract_type, identifica si es "Obra", "Servei","Subministrament" o "Concessió" del contexto
+5. Limpia el CIF eliminando espacios, guiones y puntos
+6. Si no encuentras un campo, usa cadena vacía "" o array vacío []
+7. NO inventes datos, solo extrae lo que existe en el documento
+8. Para areas y centers, busca menciones de residencias, centros de día, servicios sociales, etc.
+9. Responde ÚNICAMENTE con JSON válido, sin markdown ni explicaciones adicionales
+
+TEXTO DEL PDF:
+${pdfText}`;
 
         const result = await generateContentWithRetry(model, prompt);
-        const response = await result.response;
-        const text = response.text();
+        const responseText = result.response.text();
 
-        // Limpiar el texto para obtener solo el JSON
-        const jsonString = text.replace(/```json\n?|\n?```/g, '').trim();
+        console.log('Gemini response:', responseText);
 
-        const extractedData = JSON.parse(jsonString);
+        // Limpiar respuesta (por si viene con ```json)
+        const cleanJson = responseText
+            .replace(/```json\n?/g, '')
+            .replace(/```\n?/g, '')
+            .trim();
+
+        const extractedData: ExtractedContractData = JSON.parse(cleanJson);
+
+        // Validación básica
+        if (!extractedData.contract || !extractedData.lots) {
+            throw new Error('Estructura de datos inválida en la respuesta de IA');
+        }
+
+        if (extractedData.lots.length === 0) {
+            throw new Error('No se detectaron lots en el documento');
+        }
 
         // Validar fechas ISO
         const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -181,8 +190,7 @@ export async function extractContractDataFromPDF(
 
         // Mensajes de error más específicos
         if (error.message?.includes('API key')) {
-            // Incluimos el mensaje original para depuración
-            throw new Error(`Error de configuración: API key de Gemini inválida. Detalles: ${error.message}`);
+            throw new Error('Error de configuración: API key de Gemini inválida');
         }
         if (error.message?.includes('quota') || error.message?.includes('429')) {
             throw new Error('Límite de API excedido. Espera 1-2 minutos antes de volver a intentarlo.');
