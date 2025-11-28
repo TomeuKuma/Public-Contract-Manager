@@ -10,7 +10,7 @@ async function testGeminiAPI() {
     try {
         console.log('🔍 Probando conexión con Gemini API...\n');
 
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-8b' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
         const result = await model.generateContent('Di "Hola" en una palabra');
         const response = result.response.text();
