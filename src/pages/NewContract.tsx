@@ -63,7 +63,6 @@ const NewContract = () => {
   const [selectedCenters, setSelectedCenters] = useState<string[]>([]);
   const [duplicateFileNumberError, setDuplicateFileNumberError] = useState(false);
   const [showPDFModal, setShowPDFModal] = useState(false);
-  const [extractedLots, setExtractedLots] = useState<any[]>([]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -135,9 +134,6 @@ const NewContract = () => {
     setSelectedAreas(data.contract.area_ids);
     setSelectedCenters(data.contract.center_ids);
 
-    // Guardar lots extraídos
-    setExtractedLots(data.lots);
-
     toast({
       title: "Dades importades",
       description: "Revisa els camps i completa la informació que falta. Els lots s'hauran d'afegir manualment.",
@@ -171,7 +167,6 @@ const NewContract = () => {
       ...formData,
       areas: selectedAreas,
       centers: selectedCenters,
-      lots: extractedLots,
     };
 
     const { data, error } = await createContract(contractData);
