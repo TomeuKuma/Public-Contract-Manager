@@ -41,6 +41,8 @@ export const ContractEditDialog = ({ contract, open, onOpenChange, onSuccess }: 
       award_procedure: contract.award_procedure || "",
       contract_type: contract.contract_type || "",
       purpose: contract.purpose || "",
+      need_to_satisfy: contract.need_to_satisfy || "",
+      observations: contract.observations || "",
       extendable: contract.extendable || false,
       modifiable: contract.modifiable || false,
     }
@@ -68,6 +70,8 @@ export const ContractEditDialog = ({ contract, open, onOpenChange, onSuccess }: 
         award_procedure: contract.award_procedure || "",
         contract_type: contract.contract_type || "",
         purpose: contract.purpose || "",
+        need_to_satisfy: contract.need_to_satisfy || "",
+        observations: contract.observations || "",
         extendable: contract.extendable || false,
         modifiable: contract.modifiable || false,
       });
@@ -139,6 +143,8 @@ export const ContractEditDialog = ({ contract, open, onOpenChange, onSuccess }: 
           award_procedure: data.award_procedure,
           contract_type: data.contract_type,
           purpose: data.purpose,
+          need_to_satisfy: data.need_to_satisfy,
+          observations: data.observations,
           extendable: data.extendable,
           modifiable: data.modifiable,
           referencia_interna: data.referencia_interna,
@@ -458,7 +464,35 @@ export const ContractEditDialog = ({ contract, open, onOpenChange, onSuccess }: 
                 name="purpose"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Objecte</FormLabel>
+                    <FormLabel>Descripció de l'objecte</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} rows={3} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="need_to_satisfy"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Necessitat a satisfer</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} rows={3} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="observations"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Observacions</FormLabel>
                     <FormControl>
                       <Textarea {...field} rows={3} />
                     </FormControl>

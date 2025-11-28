@@ -74,6 +74,8 @@ const NewContract = () => {
     award_procedure: "",
     contract_type: "",
     purpose: "",
+    need_to_satisfy: "",
+    observations: "",
     extendable: false,
     modifiable: false,
     referencia_interna: "",
@@ -147,6 +149,15 @@ const NewContract = () => {
       toast({
         title: "Error",
         description: "El nom del contracte és obligatori",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.file_number) {
+      toast({
+        title: "Error",
+        description: "El número d'expedient és obligatori",
         variant: "destructive",
       });
       return;
@@ -261,7 +272,9 @@ const NewContract = () => {
 
                 <div>
                   <div className="flex items-center gap-2 h-5 mb-2">
-                    <Label htmlFor="file_number">Núm. d'expedient</Label>
+                    <Label htmlFor="file_number">
+                      Núm. d'expedient <span className="text-destructive">*</span>
+                    </Label>
                     {duplicateFileNumberError && (
                       <span className="text-[10px] text-destructive font-medium leading-tight">
                         Nº d'expedient existent.
@@ -292,12 +305,36 @@ const NewContract = () => {
               </div>
 
               <div>
-                <Label htmlFor="purpose">Objecte</Label>
+                <Label htmlFor="purpose">Descripció de l'objecte</Label>
                 <Textarea
                   id="purpose"
                   value={formData.purpose}
                   onChange={(e) =>
                     setFormData({ ...formData, purpose: e.target.value })
+                  }
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="need_to_satisfy">Necessitat a satisfer</Label>
+                <Textarea
+                  id="need_to_satisfy"
+                  value={formData.need_to_satisfy}
+                  onChange={(e) =>
+                    setFormData({ ...formData, need_to_satisfy: e.target.value })
+                  }
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="observations">Observacions</Label>
+                <Textarea
+                  id="observations"
+                  value={formData.observations}
+                  onChange={(e) =>
+                    setFormData({ ...formData, observations: e.target.value })
                   }
                   rows={3}
                 />

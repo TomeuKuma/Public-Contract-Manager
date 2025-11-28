@@ -150,6 +150,8 @@ export type Database = {
           modifiable: boolean | null
           name: string
           purpose: string | null
+          need_to_satisfy: string | null
+          observations: string | null
           start_date: string | null
           end_date: string | null
           updated_at: string
@@ -168,6 +170,8 @@ export type Database = {
           modifiable?: boolean | null
           name: string
           purpose?: string | null
+          need_to_satisfy?: string | null
+          observations?: string | null
           updated_at?: string
         }
         Update: {
@@ -184,6 +188,8 @@ export type Database = {
           modifiable?: boolean | null
           name?: string
           purpose?: string | null
+          need_to_satisfy?: string | null
+          observations?: string | null
           updated_at?: string
         }
         Relationships: []

@@ -151,10 +151,45 @@ export function ContractHeader({ contract, onEdit, onDelete, onClose }: Contract
                 </div>
 
                 {/* Purpose */}
+                {/* Purpose */}
                 {contract.purpose && (
                     <div>
-                        <p className="text-muted-foreground text-sm mb-2">Objecte:</p>
+                        <p className="text-muted-foreground text-sm mb-2">Descripció de l'objecte:</p>
                         <p className="text-sm">{contract.purpose}</p>
+                    </div>
+                )}
+
+                {/* Need to Satisfy */}
+                {contract.need_to_satisfy && (
+                    <div>
+                        <p className="text-muted-foreground text-sm mb-2">Necessitat a satisfer:</p>
+                        <p className="text-sm">{contract.need_to_satisfy}</p>
+                    </div>
+                )}
+
+                {/* Observations */}
+                {contract.observations && (
+                    <div>
+                        <p className="text-muted-foreground text-sm mb-2">Observacions:</p>
+                        <p className="text-sm">{contract.observations}</p>
+                    </div>
+                )}
+
+                {/* Areas */}
+                {contract.areas && contract.areas.length > 0 && (
+                    <div>
+                        <p className="text-muted-foreground text-sm mb-2">Àrees associades:</p>
+                        <div className="flex flex-wrap gap-2">
+                            {contract.areas.map((area: any, index: number) => (
+                                <Badge
+                                    key={index}
+                                    variant="secondary"
+                                    className="bg-primary/10 text-primary hover:bg-primary/20"
+                                >
+                                    {typeof area === 'string' ? area : area.name}
+                                </Badge>
+                            ))}
+                        </div>
                     </div>
                 )}
 

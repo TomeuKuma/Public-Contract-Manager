@@ -11,6 +11,8 @@ export const contractSchema = z.object({
     award_procedure: z.string().optional(),
     contract_type: z.string().optional(),
     purpose: z.string().optional(),
+    need_to_satisfy: z.string().optional(),
+    observations: z.string().optional(),
     extendable: z.boolean().default(false),
     modifiable: z.boolean().default(false),
 });
