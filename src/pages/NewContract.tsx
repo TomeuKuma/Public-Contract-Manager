@@ -218,23 +218,23 @@ const NewContract = () => {
             </h1>
           </div>
 
-          {/* Botón para importar desde PDF */}
-          <div className="flex justify-end mb-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowPDFModal(true)}
-            >
-              <FileText className="mr-2 h-4 w-4" />
-              Importar des de PDF
-            </Button>
-          </div>
-
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="bg-card rounded-lg border p-6 space-y-4">
-              <h2 className="text-xl font-semibold mb-4">
-                Informació bàsica
-              </h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">
+                  Informació bàsica
+                </h2>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="flex flex-col items-center justify-center h-auto py-1 px-2 hover:bg-transparent text-primary"
+                  onClick={() => setShowPDFModal(true)}
+                  title="Importar des de PDF"
+                >
+                  <FileText className="h-6 w-6" />
+                  <span className="text-[10px] font-bold leading-none mt-0.5">IA</span>
+                </Button>
+              </div>
 
               <div>
                 <Label htmlFor="name">
@@ -252,7 +252,9 @@ const NewContract = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="dossier_number">Núm. de dossier</Label>
+                  <div className="flex items-center gap-2 h-5 mb-2">
+                    <Label htmlFor="dossier_number">Núm. de dossier</Label>
+                  </div>
                   <Input
                     id="dossier_number"
                     value={formData.dossier_number}
@@ -263,11 +265,11 @@ const NewContract = () => {
                 </div>
 
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 h-5 mb-2">
                     <Label htmlFor="file_number">Núm. d'expedient</Label>
                     {duplicateFileNumberError && (
                       <span className="text-[10px] text-destructive font-medium leading-tight">
-                        Nº d'expedient existent. Modifica o elimina el contracte duplicat abans de poder crear aquest contracte.
+                        Nº d'expedient existent.
                       </span>
                     )}
                   </div>

@@ -104,12 +104,12 @@ export function PDFExtractionModal({ open, onClose, onDataExtracted }: PDFExtrac
 
     return (
         <Dialog open={open} onOpenChange={handleCancel}>
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
                 <DialogHeader>
                     <DialogTitle>Importar Contracte des de PDF</DialogTitle>
                 </DialogHeader>
 
-                <div className="space-y-4">
+                <div className="flex-1 overflow-y-auto min-h-0 space-y-4 pr-1">
                     {/* Upload Area */}
                     <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors">
                         <input
@@ -120,12 +120,14 @@ export function PDFExtractionModal({ open, onClose, onDataExtracted }: PDFExtrac
                             id="pdf-upload"
                             disabled={isExtracting}
                         />
-                        <label htmlFor="pdf-upload" className="cursor-pointer">
+                        <label htmlFor="pdf-upload" className="cursor-pointer block w-full">
                             {file ? (
-                                <div className="flex items-center justify-center gap-2">
-                                    <FileText className="h-8 w-8 text-primary" />
-                                    <div className="text-left">
-                                        <p className="text-sm font-medium">{file.name}</p>
+                                <div className="flex items-center justify-center gap-2 w-full px-4 max-w-full">
+                                    <FileText className="h-8 w-8 text-primary flex-shrink-0" />
+                                    <div className="text-left min-w-0 flex-1 overflow-hidden">
+                                        <p className="text-sm font-medium truncate" title={file.name}>
+                                            {file.name}
+                                        </p>
                                         <p className="text-xs text-muted-foreground">
                                             {(file.size / 1024).toFixed(2)} KB
                                         </p>
@@ -135,7 +137,7 @@ export function PDFExtractionModal({ open, onClose, onDataExtracted }: PDFExtrac
                                 <>
                                     <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-2" />
                                     <p className="text-sm text-muted-foreground">
-                                        Selecciona un PDF de resolució d'adjudicació
+                                        Selecciona un arxiu de <span className="font-bold">Resolució d'adjudicació del contracte</span> en format .pdf
                                     </p>
                                     <p className="text-xs text-muted-foreground mt-1">
                                         Clica per seleccionar un arxiu
@@ -234,32 +236,32 @@ export function PDFExtractionModal({ open, onClose, onDataExtracted }: PDFExtrac
                             </p>
                         </div>
                     )}
+                </div>
 
-                    {/* Actions */}
-                    <div className="flex gap-2 justify-end pt-4 border-t">
-                        <Button variant="outline" onClick={handleCancel} disabled={isExtracting}>
-                            Cancel·lar
+                {/* Actions */}
+                <div className="flex gap-2 justify-end pt-4 border-t mt-auto">
+                    <Button variant="outline" onClick={handleCancel} disabled={isExtracting}>
+                        Cancel·lar
+                    </Button>
+                    {!extractedData ? (
+                        <Button
+                            onClick={handleExtract}
+                            disabled={!file || isExtracting || isCatalogsLoading}
+                        >
+                            {isExtracting ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Processant...
+                                </>
+                            ) : (
+                                'Extraure Dades'
+                            )}
                         </Button>
-                        {!extractedData ? (
-                            <Button
-                                onClick={handleExtract}
-                                disabled={!file || isExtracting || isCatalogsLoading}
-                            >
-                                {isExtracting ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Processant...
-                                    </>
-                                ) : (
-                                    'Extraure Dades'
-                                )}
-                            </Button>
-                        ) : (
-                            <Button onClick={handleConfirm}>
-                                Aplicar al Formulari
-                            </Button>
-                        )}
-                    </div>
+                    ) : (
+                        <Button onClick={handleConfirm}>
+                            Aplicar al Formulari
+                        </Button>
+                    )}
                 </div>
             </DialogContent>
         </Dialog>
