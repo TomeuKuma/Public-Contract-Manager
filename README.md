@@ -45,14 +45,27 @@ src/
 3.  **Base de Datos como Fuente de Verdad**: La lógica de filtrado complejo y agregación se delega a **PostgreSQL** (Vistas y RPCs) siempre que es posible para mantener el frontend ligero.
 4.  **Componentes Puros**: Se prioriza la memoización (`React.memo`, `useMemo`) en componentes de lista como `ContractCard` para evitar re-renders innecesarios.
 
+## 📊 Explotación de Datos
+
+El sistema incluye un módulo de análisis de datos para la toma de decisiones:
+
+### Verificación de Fraccionamiento
+Herramienta para detectar posibles fraccionamientos de contratos.
+- **Gráfico Interactivo**: Visualización de crédito comprometido por órgano de contratación.
+- **Tabla Detallada**: Desglose jerárquico de Lotes -> Créditos -> Facturas.
+- **Exportación Excel**: Descarga de informes detallados en formato `.xlsx` incluyendo número de expediente y partidas presupuestarias.
+
 ## 💾 Modelo de Datos
 
 La jerarquía de datos es la siguiente:
 
 `Contracte` (Contrato Marco)
-└── `Lots` (Lotes específicos)
-    └── `Credits` (Asignaciones presupuestarias anuales)
-        └── `Factures` (Ejecución real del gasto)
+├── `Lots` (Lotes específicos)
+│   └── `Credits` (Asignaciones presupuestarias anuales)
+│       └── `Factures` (Ejecución real del gasto)
+└── Campos Adicionales:
+    ├── `need_to_satisfy` (Necesidad a satisfacer)
+    └── `observations` (Observaciones generales)
 
 *   **Relaciones**:
     *   Un Contrato tiene múltiples Lotes.
@@ -98,3 +111,5 @@ Si eres un agente de IA encargado de mantener o extender este código, sigue est
 -   [x] Implementación de validación Zod en edición de contratos.
 -   [x] Optimización de `ContractCard` con memoización.
 -   [x] Creación de migración SQL para optimización de queries (`supabase/migrations/`).
+-   [x] **Nuevos Campos**: "Necessitat a satisfer" y "Observacions" en contratos.
+-   [x] **Verificación de Fraccionamiento**: Tabla detallada con exportación a Excel.

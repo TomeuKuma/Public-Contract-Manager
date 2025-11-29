@@ -166,6 +166,8 @@ Contratos marco.
 | `award_procedure` | TEXT | | Procedimiento de adjudicación |
 | `contract_type` | TEXT | | Tipo contractual |
 | `purpose` | TEXT | | Objeto del contrato |
+| `need_to_satisfy` | TEXT | | Necesidad a satisfacer |
+| `observations` | TEXT | | Observaciones |
 | `extendable` | BOOLEAN | DEFAULT false | ¿Es prorrogable? |
 | `modifiable` | BOOLEAN | DEFAULT false | ¿Es modificable? |
 | `referencia_interna` | TEXT | | Referencia interna |

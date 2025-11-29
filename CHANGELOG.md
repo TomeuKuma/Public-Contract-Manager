@@ -5,6 +5,12 @@ Tots els canvis notables en aquest projecte es documentaran en aquest fitxer.
 ## [Unreleased]
 
 ### Afegit
+- **Explotació de Dades**:
+  - **Verificació de Fraccionament**: Nova taula detallada amb visió jeràrquica (Lotes -> Crèdits -> Factures).
+  - **Exportació Excel**: Funcionalitat per descarregar les dades de l'anàlisi de fraccionament en format `.xlsx`, incloent número d'expedient i partides pressupostàries.
+- **Nous Camps de Contracte**:
+  - `need_to_satisfy` ("Necessitat a satisfer"): Camp de text per justificar la necessitat del contracte.
+  - `observations` ("Observacions"): Camp de text lliure per a notes addicionals.
 - **Lots Prorrogables**: Ara es pot marcar un lot com a prorrogable, habilitant camps per a dates de pròrroga i termini de comunicació.
 - **Crèdits Modificables**: Ara es pot marcar un contracte com a modificable, permetent afegir modificacions de crèdit als lots.
 - **Càlculs Automàtics**:

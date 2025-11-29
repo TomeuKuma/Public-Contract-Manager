@@ -78,8 +78,8 @@
 
 ## PLAN DE ACCIÓN RECOMENDADO
 
-1.  **Migración a TanStack Query**: Refactorizar `useContracts` para eliminar `useState` manual.
-2.  **Optimización de Base de Datos**: Crear Vista SQL para totales de contratos.
-3.  **Corrección de Filtrado**: Mover lógica de años al backend.
-4.  **Validación Robusta**: Implementar Zod en formularios.
-5.  **Optimización UI**: Memoizar cálculos en `ContractCard`.
+1.  ✅ **Migración a TanStack Query**: Refactorizar `useContracts` para eliminar `useState` manual. (Completado)
+2.  ✅ **Optimización de Base de Datos**: Crear Vista SQL para totales de contratos. (Completado con optimización de queries y RPCs)
+3.  ✅ **Corrección de Filtrado**: Mover lógica de años al backend. (Mejorado con filtros en Supabase)
+4.  ✅ **Validación Robusta**: Implementar Zod en formularios. (Implementado en todos los formularios principales)
+5.  ✅ **Optimización UI**: Memoizar cálculos en `ContractCard`. (Completado)

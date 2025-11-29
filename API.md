@@ -19,6 +19,8 @@ Emmagatzema la informació principal dels expedients de contractació.
 - `end_date`: Date
 - `extendable`: Boolean (Prorrogable)
 - `modifiable`: Boolean (Modificable)
+- `need_to_satisfy`: Text (Necessitat a satisfer)
+- `observations`: Text (Observacions)
 - ... altres camps
 
 #### `lots`
@@ -69,6 +71,11 @@ Conté la lògica per interactuar amb Supabase referent als contractes.
 - `getContractById(id)`: Recupera un contracte complet amb les seves relacions (lots, crèdits, factures, àrees, centres) i transforma les dades per adaptar-les a la interfície `Contract`.
 - `createContract(data)`: Crea un nou contracte i les seves associacions.
 - `deleteContract(id)`: Elimina un contracte.
+
+### `exploitationService.ts`
+Serveis per a l'explotació i anàlisi de dades.
+
+- `getFractionationDetails(filters)`: Recupera dades detallades per a la verificació de fraccionament, incloent estructura jeràrquica (Lotes -> Crèdits -> Factures) i camps de pressupost.
 
 ### `constants.ts`
 Defineix llistes estàtiques utilitzades a l'aplicació:
