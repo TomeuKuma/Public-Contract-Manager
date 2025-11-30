@@ -75,8 +75,8 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-accent/10 p-4">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1 text-center">
-          <div className="w-16 h-16 mx-auto mb-4 bg-primary rounded-full flex items-center justify-center">
-            <span className="text-2xl font-bold text-primary-foreground">IMAS</span>
+          <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center overflow-hidden">
+            <img src="/imas-logo.jpg" alt="IMAS Logo" className="w-full h-full object-contain" />
           </div>
           <CardTitle className="text-2xl">Gestió de despesa IMAS</CardTitle>
           <CardDescription>

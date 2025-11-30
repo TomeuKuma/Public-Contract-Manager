@@ -20,3 +20,11 @@ export function calculateTotalInvoice(
 ): number {
     return baseImport + ivaImport;
 }
+
+export function calculateExecutionPercentage(
+    creditReconegut: number,
+    creditCompromes: number
+): number {
+    if (creditCompromes === 0) return 0;
+    return Math.round((creditReconegut / creditCompromes) * 100);
+}

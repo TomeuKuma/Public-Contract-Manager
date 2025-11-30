@@ -34,8 +34,8 @@ const Header = () => {
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
-            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-lg font-bold text-primary-foreground">IMAS</span>
+            <div className="w-10 h-10 flex items-center justify-center overflow-hidden">
+              <img src="/imas-logo.jpg" alt="IMAS Logo" className="w-full h-full object-contain" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-foreground">Gestió de despesa IMAS</h1>
