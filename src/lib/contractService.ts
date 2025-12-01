@@ -11,12 +11,10 @@ export interface ContractFilters {
 
 export const getContracts = async (filters?: ContractFilters, page = 0, pageSize = 50) => {
   try {
-    let query = supabase
-      .from("contracts")
-      .select(`
+    let selectQuery = `
         *,
-        contract_areas!inner(area_id),
-        contract_centers!inner(center_id),
+        contract_areas${filters?.selectedAreas?.length ? '!inner' : ''}(area_id),
+        contract_centers${filters?.selectedCenters?.length ? '!inner' : ''}(center_id),
         lots(
           id,
           name,
@@ -35,7 +33,11 @@ export const getContracts = async (filters?: ContractFilters, page = 0, pageSize
             description_ca
           )
         )
-      `, { count: 'exact' });
+      `;
+
+    let query = supabase
+      .from("contracts")
+      .select(selectQuery, { count: 'exact' });
 
     // Apply search filter (DB side)
     if (filters?.search) {
