@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import FiltersSidebar from "@/components/FiltersSidebar";
 import ContractCard from "@/components/ContractCard";
+import { SortSelector, SortOption } from "@/components/SortSelector";
 import { Button } from "@/components/ui/button";
 import { Plus, Loader2 } from "lucide-react";
 import { getContracts, ContractFilters } from "@/lib/contractService";
@@ -13,7 +14,8 @@ import { useContracts } from "@/hooks/useContracts";
 
 const Index = () => {
   const { filters } = useFilters();
-  const { contracts, loading, loadMore, totalCount } = useContracts(filters);
+  const [sortOption, setSortOption] = useState<SortOption | null>(null);
+  const { contracts, loading, loadMore, totalCount } = useContracts(filters, sortOption);
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
 
@@ -68,6 +70,11 @@ const Index = () => {
                 <Plus className="mr-2 h-4 w-4" />
                 Nou Contracte
               </Button>
+            </div>
+
+            {/* Sort Selector */}
+            <div className="mb-4 flex justify-end">
+              <SortSelector value={sortOption} onChange={setSortOption} />
             </div>
 
             {loading && contracts.length === 0 ? (

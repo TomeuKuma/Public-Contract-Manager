@@ -1,9 +1,9 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { getContracts, createContract as createContractService, deleteContract as deleteContractService } from "@/lib/contractService";
+import { getContracts, createContract as createContractService, deleteContract as deleteContractService, ContractSort } from "@/lib/contractService";
 import { Contract } from "@/types";
 
-export function useContracts(filters?: any) {
+export function useContracts(filters?: any, sort?: ContractSort) {
     const { toast } = useToast();
     const queryClient = useQueryClient();
 
@@ -17,10 +17,11 @@ export function useContracts(filters?: any) {
         status,
         refetch
     } = useInfiniteQuery({
-        queryKey: ['contracts', filters],
+        queryKey: ['contracts', filters, sort],
         queryFn: async ({ pageParam = 0, queryKey }) => {
             const currentFilters = queryKey[1] as any;
-            const { data, count, error } = await getContracts(currentFilters, pageParam, 50);
+            const currentSort = queryKey[2] as ContractSort | undefined;
+            const { data, count, error } = await getContracts(currentFilters, pageParam, 50, currentSort);
             if (error) throw new Error(error);
             return { data, count, nextPage: (data && data.length === 50) ? pageParam + 1 : undefined };
         },

@@ -39,6 +39,17 @@ const ContractCard = memo(({ contract, onClick }: ContractCardProps) => {
   };
 
   const { totalCreditReal, totalCreditCommitted, totalCreditRecognized, executionPercentage } = useMemo(() => {
+    // Use pre-calculated values from the view if available
+    if (contract.total_real !== undefined) {
+      return {
+        totalCreditReal: contract.total_real,
+        totalCreditCommitted: contract.total_committed || 0,
+        totalCreditRecognized: contract.total_recognized || 0,
+        executionPercentage: contract.execution_percentage || 0
+      };
+    }
+
+    // Fallback for when we don't have the view data (e.g. after creating a new contract locally before refresh)
     const real = contract.lots?.reduce(
       (sum, lot) => sum + (lot.credit_real_total || 0),
       0
@@ -93,94 +104,150 @@ const ContractCard = memo(({ contract, onClick }: ContractCardProps) => {
       totalCreditRecognized: recognized,
       executionPercentage: execPercentage
     };
-  }, [contract.lots]);
+  }, [contract]);
 
   return (
     <Card
-      className={`cursor-pointer hover:shadow-lg transition-all duration-200 border-l-4 ${getBorderColor(contract.contract_type)} flex flex-col md:flex-row md:items-center`}
+      className={`cursor-pointer hover:shadow-lg transition-all duration-200 border-l-4 ${getBorderColor(contract.contract_type)}`}
       onClick={onClick}
     >
-      <CardHeader className="pb-2 md:pb-6 md:w-1/3">
-        <CardTitle className="text-lg font-semibold">{contract.name}</CardTitle>
-        <div className="flex flex-col gap-1 text-xs text-muted-foreground mt-2">
-          {contract.file_number && (
-            <span>
-              Exp:{" "}
-              <a
-                href={`https://imas.secimallorca.net/segex/expediente.aspx?id=${contract.file_number.slice(
-                  0,
-                  -1
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:underline text-blue-600"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {contract.file_number}
-              </a>
-            </span>
-          )}
-          {contract.dossier_number && (
-            <span>
-              Doss:{" "}
-              <a
-                href={`https://imas.secimallorca.net/segex/expediente.aspx?id=${contract.dossier_number.slice(
-                  0,
-                  -1
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:underline text-blue-600"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {contract.dossier_number}
-              </a>
-            </span>
-          )}
-        </div>
-        {(contract.start_date || contract.end_date) && (
-          <div className="text-xs text-muted-foreground mt-1">
-            {formatDate(contract.start_date)} - {formatDate(contract.end_date)}
-          </div>
-        )}
-      </CardHeader>
-      <CardContent className="pt-0 md:pt-6 md:w-2/3">
-        {contract.lots && contract.lots.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {contract.lots.slice(0, 5).map((lot) => (
-              <div
-                key={lot.id}
-                className="flex items-center gap-2 bg-muted/50 px-2 py-1 rounded text-xs"
-              >
-                <span className="text-muted-foreground">{lot.name}</span>
-                <span className="font-semibold text-foreground">
-                  {formatCurrency(lot.credit_real_total)}
-                </span>
+      <CardHeader className="pb-3">
+        <div className="flex justify-between items-start gap-4">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-base font-semibold line-clamp-2">{contract.name}</CardTitle>
+            {(contract.award_procedure || contract.contract_type) && (
+              <div className="text-xs text-muted-foreground mt-1">
+                {contract.award_procedure && contract.contract_type
+                  ? `${contract.award_procedure} - ${contract.contract_type}`
+                  : contract.award_procedure || contract.contract_type
+                }
               </div>
-            ))}
-            {contract.lots.length > 5 && (
-              <Badge variant="secondary" className="text-xs">
-                +{contract.lots.length - 5}
-              </Badge>
             )}
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground mt-1.5">
+              {contract.file_number && (
+                <span>
+                  Exp:{" "}
+                  <a
+                    href={`https://imas.secimallorca.net/segex/expediente.aspx?id=${contract.file_number.slice(
+                      0,
+                      -1
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:underline text-blue-600"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {contract.file_number}
+                  </a>
+                </span>
+              )}
+              {contract.dossier_number && (
+                <span>
+                  Doss:{" "}
+                  <a
+                    href={`https://imas.secimallorca.net/segex/expediente.aspx?id=${contract.dossier_number.slice(
+                      0,
+                      -1
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:underline text-blue-600"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {contract.dossier_number}
+                  </a>
+                </span>
+              )}
+              {(contract.start_date || contract.end_date) && (
+                <span>
+                  {formatDate(contract.start_date)} - {formatDate(contract.end_date)}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="text-right flex-shrink-0">
+            <div className="text-xs text-muted-foreground mb-1">Total</div>
+            <div className="text-sm font-bold">{formatCurrency(totalCreditCommitted)}</div>
+            <div className="text-xs text-muted-foreground mt-0.5">
+              Exec: <span className="font-semibold text-foreground">{executionPercentage.toFixed(1)}%</span>
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        {contract.lots && contract.lots.length > 0 && (
+          <div className="space-y-2">
+            <div className="text-xs font-medium text-muted-foreground mb-1.5">
+              Lotes ({contract.lots.length})
+            </div>
+            <div className="space-y-1.5">
+              {contract.lots.slice(0, 4).map((lot) => (
+                <div
+                  key={lot.id}
+                  className="bg-muted/40 px-3 py-2 rounded text-xs space-y-1"
+                >
+                  <div className="flex justify-between items-start gap-2">
+                    <span className="font-medium text-foreground flex-1 line-clamp-1">{lot.name}</span>
+                  </div>
+                  {lot.awardee && (
+                    <div className="text-muted-foreground">
+                      <span className="font-medium">Adjudicatari:</span> {lot.awardee}
+                    </div>
+                  )}
+                  {lot.cpv_code && (
+                    <div className="text-muted-foreground">
+                      <span className="font-medium">CPV:</span> {lot.cpv_code} - {lot.cpv_description}
+                    </div>
+                  )}
+                  {(lot.start_date || lot.end_date) && (
+                    <div className="text-muted-foreground">
+                      {formatDate(lot.start_date)} - {formatDate(lot.end_date)}
+                    </div>
+                  )}
+                  <div className="flex gap-4 pt-1 border-t border-muted-foreground/20">
+                    <div>
+                      <span className="text-muted-foreground">Compromès:</span>{" "}
+                      <span className="font-semibold text-foreground">
+                        {formatCurrency(lot.lot_committed || 0)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Reconegut:</span>{" "}
+                      <span className="font-semibold text-foreground">
+                        {formatCurrency(lot.lot_recognized || 0)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {contract.lots.length > 4 && (
+                <div className="text-center py-1">
+                  <Badge variant="secondary" className="text-xs">
+                    +{contract.lots.length - 4} lote{contract.lots.length - 4 > 1 ? 's' : ''} més
+                  </Badge>
+                </div>
+              )}
+            </div>
           </div>
         )}
-        <div className="mt-4 flex justify-end">
-          <div className="text-sm text-right space-y-1">
+        <div className="mt-3 pt-3 border-t flex justify-between text-xs">
+          <div className="space-y-0.5">
             <div>
-              <span className="text-muted-foreground">Compromès: </span>
+              <span className="text-muted-foreground">Compromès:</span>{" "}
               <span className="font-semibold">{formatCurrency(totalCreditCommitted)}</span>
             </div>
             <div>
-              <span className="text-muted-foreground">Reconegut: </span>
+              <span className="text-muted-foreground">Reconegut:</span>{" "}
               <span className="font-semibold">{formatCurrency(totalCreditRecognized)}</span>
             </div>
+          </div>
+          <div className="space-y-0.5 text-right">
             <div>
-              <span className="text-muted-foreground">Real: </span>
+              <span className="text-muted-foreground">Real:</span>{" "}
               <span className="font-semibold">{formatCurrency(totalCreditReal)}</span>
             </div>
             <div>
-              <span className="text-muted-foreground">Executat %: </span>
+              <span className="text-muted-foreground">Execució:</span>{" "}
               <span className="font-semibold">{executionPercentage.toFixed(2)}%</span>
             </div>
           </div>

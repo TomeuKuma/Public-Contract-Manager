@@ -8,6 +8,14 @@ export interface Contract extends Tables<'contracts'> {
     centers?: string[];
     lots?: Lot[];
     centers_data?: { id: string; name: string }[];
+    // Optimized view fields
+    total_committed?: number;
+    total_recognized?: number;
+    total_real?: number;
+    execution_percentage?: number;
+    years?: number[];
+    areas_names?: string[];
+    centers_names?: string[];
 }
 
 export interface Lot extends Tables<'lots'> {
@@ -16,6 +24,9 @@ export interface Lot extends Tables<'lots'> {
     credit_committed_total?: number;
     cpv_code?: string;
     cpv_description?: string;
+    // Year-filtered calculated fields
+    lot_committed?: number;
+    lot_recognized?: number;
     // Overriding sort_order to be optional in frontend if needed, but it's in Tables now
 }
 

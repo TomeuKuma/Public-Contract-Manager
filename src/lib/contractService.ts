@@ -9,35 +9,17 @@ export interface ContractFilters {
   selectedYears: number[];
 }
 
-export const getContracts = async (filters?: ContractFilters, page = 0, pageSize = 50) => {
-  try {
-    let selectQuery = `
-        *,
-        contract_areas${filters?.selectedAreas?.length ? '!inner' : ''}(area_id),
-        contract_centers${filters?.selectedCenters?.length ? '!inner' : ''}(center_id),
-        lots(
-          id,
-          name,
-          start_date,
-          end_date,
-          credits(
-            credit_real,
-            credit_committed_d,
-            credit_recognized_o,
-            modificacio,
-            prorroga,
-            any
-          ),
-          cpv_codes(
-            code,
-            description_ca
-          )
-        )
-      `;
+export interface ContractSort {
+  field: 'total_committed' | 'start_date' | 'end_date' | 'file_number';
+  direction: 'asc' | 'desc';
+}
 
+export const getContracts = async (filters?: ContractFilters, page = 0, pageSize = 50, sort?: ContractSort) => {
+  try {
+    // Query the optimized view
     let query = supabase
-      .from("contracts")
-      .select(selectQuery, { count: 'exact' });
+      .from("contracts_summary" as any)
+      .select('*', { count: 'exact' });
 
     // Apply search filter (DB side)
     if (filters?.search) {
@@ -48,12 +30,12 @@ export const getContracts = async (filters?: ContractFilters, page = 0, pageSize
 
     // Apply area filter
     if (filters?.selectedAreas && filters.selectedAreas.length > 0) {
-      query = query.in("contract_areas.area_id", filters.selectedAreas);
+      query = query.overlaps("areas_ids", filters.selectedAreas);
     }
 
     // Apply center filter
     if (filters?.selectedCenters && filters.selectedCenters.length > 0) {
-      query = query.in("contract_centers.center_id", filters.selectedCenters);
+      query = query.overlaps("centers_ids", filters.selectedCenters);
     }
 
     // Apply contract type filter (DB side)
@@ -66,88 +48,127 @@ export const getContracts = async (filters?: ContractFilters, page = 0, pageSize
       query = query.in("award_procedure", filters.selectedAwardProcedures);
     }
 
+    // Apply year filter (DB side)
+    if (filters?.selectedYears && filters.selectedYears.length > 0) {
+      query = query.overlaps("years", filters.selectedYears);
+    }
+
     // Pagination
     const from = page * pageSize;
     const to = from + pageSize - 1;
-    query = query.range(from, to).order("created_at", { ascending: false });
+    query = query.range(from, to);
+
+    // Apply sorting
+    if (sort) {
+      query = query.order(sort.field, { ascending: sort.direction === 'asc' });
+    } else {
+      // Default sorting
+      query = query.order("created_at", { ascending: false });
+    }
 
     const { data, count, error } = await query;
 
     if (error) throw error;
 
-    // Calculate lot totals
-    let processedData = data?.map((contract: any) => ({
-      ...contract,
-      lots: contract.lots?.map((lot: any) => ({
-        ...lot,
-        credit_real_total: lot.credits?.reduce(
-          (sum: number, credit: any) => sum + ((Number(credit.credit_committed_d) || 0) - (Number(credit.credit_recognized_o) || 0)),
+    // Fetch lots with credits and CPV for the contracts in this page
+    if (data && data.length > 0) {
+      const contractIds = data.map((c: any) => c.id);
+
+      // Fetch lots with their credits and CPV codes
+      const { data: lotsData } = await supabase
+        .from("lots")
+        .select(`
+          id, 
+          name, 
+          contract_id, 
+          awardee, 
+          start_date, 
+          end_date,
+          cpv_codes(code, description_ca),
+          credits(
+            id,
+            credit_committed_d,
+            credit_recognized_o,
+            any
+          )
+        `)
+        .in('contract_id', contractIds)
+        .order('sort_order', { ascending: true });
+
+      // Process lots and filter credits by year if needed
+      const processedLots = lotsData?.map((lot: any) => {
+        let credits = lot.credits || [];
+
+        // Filter credits by selected years if filter is active
+        if (filters?.selectedYears && filters.selectedYears.length > 0) {
+          credits = credits.filter((credit: any) =>
+            filters.selectedYears.includes(Number(credit.any))
+          );
+        }
+
+        // Calculate totals for this lot based on filtered credits
+        const lotCommitted = credits.reduce(
+          (sum: number, credit: any) => sum + (Number(credit.credit_committed_d) || 0),
           0
-        ),
-        cpv_code: lot.cpv_codes?.code,
-        cpv_description: lot.cpv_codes?.description_ca,
-      })),
-    }));
+        );
+        const lotRecognized = credits.reduce(
+          (sum: number, credit: any) => sum + (Number(credit.credit_recognized_o) || 0),
+          0
+        );
 
-    // Apply year filter (Client side - complex logic remains here for now)
-    // Note: This filters AFTER pagination, which is not ideal but necessary without complex DB logic
-    if (filters?.selectedYears && filters.selectedYears.length > 0) {
-      const years = filters.selectedYears;
-
-      const isPeriodInYears = (start?: string, end?: string) => {
-        if (!start && !end) return false;
-        const startDate = start ? new Date(start) : null;
-        const endDate = end ? new Date(end) : null;
-        const startYear = startDate ? startDate.getFullYear() : null;
-        const endYear = endDate ? endDate.getFullYear() : null;
-
-        if (!startYear && !endYear) return false;
-
-        return years.some(year => {
-          if (startYear && startYear > year) return false;
-          if (endYear && endYear < year) return false;
-          return true;
-        });
-      };
-
-      processedData = processedData?.filter((contract: any) => {
-        // Filter Lots
-        contract.lots = contract.lots?.filter((lot: any) => {
-          // Filter Credits
-          lot.credits = lot.credits?.filter((credit: any) => {
-            // Filter Invoices
-            if (credit.invoices) {
-              credit.invoices = credit.invoices.filter((invoice: any) => {
-                const invoiceYear = new Date(invoice.invoice_date).getFullYear();
-                return years.includes(invoiceYear);
-              });
-            }
-
-            const creditYear = Number(credit.any);
-            const creditValid = years.includes(creditYear);
-            return creditValid || (credit.invoices && credit.invoices.length > 0);
-          });
-
-          // Recalculate lot total after filtering credits
-          if (lot.credits) {
-            lot.credit_real_total = lot.credits.reduce(
-              (sum: number, credit: any) => sum + ((Number(credit.credit_committed_d) || 0) - (Number(credit.credit_recognized_o) || 0)),
-              0
-            );
-          } else {
-            lot.credit_real_total = 0;
-          }
-
-          const lotValid = isPeriodInYears(lot.start_date, lot.end_date);
-          return lotValid || (lot.credits && lot.credits.length > 0);
-        });
-
-        const contractValid = isPeriodInYears(contract.start_date, contract.end_date);
-        return contractValid || (contract.lots && contract.lots.length > 0);
+        return {
+          id: lot.id,
+          name: lot.name,
+          contract_id: lot.contract_id,
+          awardee: lot.awardee,
+          start_date: lot.start_date,
+          end_date: lot.end_date,
+          cpv_code: lot.cpv_codes?.code,
+          cpv_description: lot.cpv_codes?.description_ca,
+          lot_committed: lotCommitted,
+          lot_recognized: lotRecognized,
+          credits: credits
+        };
       });
+
+      // Attach lots to their contracts and recalculate totals if year filter is active
+      const contractsWithLots = data.map((contract: any) => {
+        const contractLots = processedLots?.filter((lot: any) => lot.contract_id === contract.id) || [];
+
+        // If year filter is active, recalculate contract totals from filtered lot data
+        if (filters?.selectedYears && filters.selectedYears.length > 0) {
+          const totalCommitted = contractLots.reduce((sum: number, lot: any) =>
+            sum + (lot.lot_committed || 0), 0
+          );
+          const totalRecognized = contractLots.reduce((sum: number, lot: any) =>
+            sum + (lot.lot_recognized || 0), 0
+          );
+          const totalReal = totalCommitted - totalRecognized;
+          const executionPercentage = totalCommitted > 0
+            ? (totalRecognized / totalCommitted) * 100
+            : 0;
+
+          return {
+            ...contract,
+            lots: contractLots,
+            // Override totals with filtered values
+            total_committed: totalCommitted,
+            total_recognized: totalRecognized,
+            total_real: totalReal,
+            execution_percentage: executionPercentage
+          };
+        }
+
+        return {
+          ...contract,
+          lots: contractLots
+        };
+      });
+
+      return { data: contractsWithLots as any[], count, error: null };
     }
 
-    return { data: processedData, count, error: null };
+    return { data: data as any[], count, error: null };
   } catch (error: any) {
     console.error("Error in getContracts:", error);
     return { data: null, count: 0, error: error.message };
