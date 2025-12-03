@@ -60,10 +60,10 @@ const Index = () => {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-3xl font-bold text-foreground">
-                  Control de contractes IMAS
+                  Expedients de despesa
                 </h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Gestió de contractes per a centres residencials
+                  Dashboard de control dels expedients de despesa de l'IMAS
                 </p>
               </div>
               <Button onClick={() => navigate("/contractes/nou")}>
