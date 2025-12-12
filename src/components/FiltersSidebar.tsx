@@ -50,6 +50,8 @@ const FiltersSidebar = () => {
     "Contracte obert",
     "Contracte menor AD",
     "Contracte menor ADO",
+    "OFI",
+    "REC",
   ];
 
   const hasActiveFilters =

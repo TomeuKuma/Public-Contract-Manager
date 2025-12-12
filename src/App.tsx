@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NewContract from "./pages/NewContract";
+import NewOfiRec from "./pages/NewOfiRec";
 import ContractDetail from "./pages/ContractDetail";
 import DataExploitation from "./pages/DataExploitation";
 import NotFound from "./pages/NotFound";
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/contractes/nou" element={<NewContract />} />
+            <Route path="/contractes/nou-ofi-rec" element={<NewOfiRec />} />
             <Route path="/contractes/:id" element={<ContractDetail />} />
             <Route path="/explotacio-dades" element={<DataExploitation />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

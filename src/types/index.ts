@@ -27,6 +27,7 @@ export interface Lot extends Tables<'lots'> {
     // Year-filtered calculated fields
     lot_committed?: number;
     lot_recognized?: number;
+    initial_amount?: number;
     // Overriding sort_order to be optional in frontend if needed, but it's in Tables now
 }
 
@@ -36,10 +37,41 @@ export interface Credit extends Tables<'credits'> {
     prorroga?: boolean;
 }
 
-export interface Invoice extends Tables<'invoices'> {
+export interface Invoice {
+    id: string;
+    credit_id: string;
+    invoice_number: string;
+    invoice_date: string; // ISO date string
+    base_amount: number;
+    vat_amount: number;
+    total: number;
+    center_id?: string | null;
     centers?: {
         name: string;
     };
+    // New fields for OFI/REC
+    organic_item?: string | null;
+    program_item?: string | null;
+    economic_item?: string | null;
+    accounting_document_number?: string | null;
+    economic_year?: number | null;
+    projecte_inversio?: boolean | null;
+    codi_projecte_inversio?: string | null;
+    modificacio?: boolean | null;
+    prorroga?: boolean | null;
+    register_number?: string | null;
+    cif_nif?: string | null;
+    awardee?: string | null;
+    expense_description?: string | null;
+    invoice_period_start?: string | null;
+    invoice_period_end?: string | null;
+    contract_type?: string | null;
+    price_justification?: string | null;
+    non_compliance_justification?: string | null;
+    accumulated_duration?: string | null;
+    cpv_code?: string | null;
+    cpv_description?: string | null;
+    cpv_code_id?: string | null;
 }
 
 export interface Area extends Tables<'areas'> { }

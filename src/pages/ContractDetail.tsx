@@ -12,6 +12,7 @@ import { Contract, Lot, Credit, Invoice } from "@/types";
 import { getContractById } from "@/lib/contractService";
 
 import { useFilters } from "@/hooks/useFilters";
+import { AddOrganitzacioDialog } from "@/components/forms/AddOrganitzacioDialog";
 
 const ContractDetail = () => {
   const { id } = useParams();
@@ -24,6 +25,7 @@ const ContractDetail = () => {
   const [lotDialogOpen, setLotDialogOpen] = useState(false);
   const [creditDialogOpen, setCreditDialogOpen] = useState(false);
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
+  const [addOrganitzacioOpen, setAddOrganitzacioOpen] = useState(false);
   const [editingLot, setEditingLot] = useState<Lot | null>(null);
   const [editingCredit, setEditingCredit] = useState<Credit | null>(null);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
@@ -126,8 +128,12 @@ const ContractDetail = () => {
   };
 
   const handleAddLot = () => {
-    setEditingLot(null);
-    setLotDialogOpen(true);
+    if (['OFI', 'REC'].includes(contract?.award_procedure || '')) {
+      setAddOrganitzacioOpen(true);
+    } else {
+      setEditingLot(null);
+      setLotDialogOpen(true);
+    }
   };
 
   const handleEditLot = (lot: Lot) => {
@@ -187,6 +193,7 @@ const ContractDetail = () => {
           <LotList
             lots={contract.lots || []}
             contractModifiable={contract.modifiable}
+            awardProcedure={contract.award_procedure || ''}
             onAddLot={handleAddLot}
             onEditLot={handleEditLot}
             onDeleteLot={handleDeleteLot}
@@ -216,6 +223,15 @@ const ContractDetail = () => {
             onOpenChange={setLotDialogOpen}
             onSuccess={fetchContractDetail}
             extendable={contract?.extendable}
+            isOfiRec={['OFI', 'REC'].includes(contract?.award_procedure || '')}
+          />
+        )}
+        {addOrganitzacioOpen && (
+          <AddOrganitzacioDialog
+            contractId={id!}
+            open={addOrganitzacioOpen}
+            onOpenChange={setAddOrganitzacioOpen}
+            onSuccess={fetchContractDetail}
           />
         )}
         {creditDialogOpen && (
@@ -242,6 +258,7 @@ const ContractDetail = () => {
             onOpenChange={setInvoiceDialogOpen}
             onSuccess={fetchContractDetail}
             availableCenters={availableCenters}
+            isOfiRec={['OFI', 'REC'].includes(contract?.award_procedure || '')}
           />
         )}
       </div>

@@ -26,6 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 interface LotListProps {
     lots: Lot[];
     contractModifiable: boolean;
+    awardProcedure?: string;
     onAddLot: () => void;
     onEditLot: (lot: Lot) => void;
     onDeleteLot: (id: string) => void;
@@ -40,6 +41,7 @@ interface LotListProps {
 export function LotList({
     lots: initialLots,
     contractModifiable,
+    awardProcedure,
     onAddLot,
     onEditLot,
     onDeleteLot,
@@ -102,10 +104,12 @@ export function LotList({
     return (
         <div className="border-t pt-6">
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Lots</h3>
+                <h3 className="text-lg font-semibold">
+                    {['OFI', 'REC'].includes(awardProcedure || '') ? 'Centres de despesa' : 'Lots'}
+                </h3>
                 <Button size="sm" onClick={onAddLot}>
                     <Plus className="h-4 w-4 mr-2" />
-                    Afegir Lot
+                    {['OFI', 'REC'].includes(awardProcedure || '') ? 'Afegir Centre' : 'Afegir Lot'}
                 </Button>
             </div>
 
@@ -126,6 +130,7 @@ export function LotList({
                                         key={lot.id}
                                         lot={lot}
                                         contractModifiable={contractModifiable}
+                                        awardProcedure={awardProcedure}
                                         onEdit={onEditLot}
                                         onDelete={onDeleteLot}
                                         onAddCredit={onAddCredit}
@@ -141,7 +146,7 @@ export function LotList({
                     </DndContext>
                 ) : (
                     <p className="text-sm text-muted-foreground text-center py-4">
-                        No hi ha lots associats a aquest contracte
+                        {['OFI', 'REC'].includes(awardProcedure || '') ? 'No hi ha centres associats' : 'No hi ha lots associats a aquest contracte'}
                     </p>
                 )}
             </div>

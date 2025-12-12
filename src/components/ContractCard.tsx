@@ -166,91 +166,174 @@ const ContractCard = memo(({ contract, onClick }: ContractCardProps) => {
             </div>
           </div>
           <div className="text-right flex-shrink-0">
-            <div className="text-xs text-muted-foreground mb-1">Total</div>
-            <div className="text-sm font-bold">{formatCurrency(totalCreditCommitted)}</div>
-            <div className="text-xs text-muted-foreground mt-0.5">
-              Exec: <span className="font-semibold text-foreground">{executionPercentage.toFixed(1)}%</span>
-            </div>
+            {['OFI', 'REC'].includes(contract.award_procedure || '') ? null : (
+              <>
+                <div className="text-xs text-muted-foreground mb-1">Total</div>
+                <div className="text-sm font-bold">{formatCurrency(totalCreditCommitted)}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  Exec: <span className="font-semibold text-foreground">{executionPercentage.toFixed(1)}%</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        {contract.lots && contract.lots.length > 0 && (
-          <div className="space-y-2">
-            <div className="text-xs font-medium text-muted-foreground mb-1.5">
-              Lotes ({contract.lots.length})
-            </div>
-            <div className="space-y-1.5">
-              {contract.lots.slice(0, 4).map((lot) => (
-                <div
-                  key={lot.id}
-                  className="bg-muted/40 px-3 py-2 rounded text-xs space-y-1"
-                >
-                  <div className="flex justify-between items-start gap-2">
-                    <span className="font-medium text-foreground flex-1 line-clamp-1">{lot.name}</span>
+        {['OFI', 'REC'].includes(contract.award_procedure || '') ? (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <div className="text-xs font-medium text-muted-foreground mb-1.5">
+                Centres i Factures
+              </div>
+              {/* OFI/REC: List of Lots (Centres de despesa) */}
+              {contract.lots?.map((lot) => {
+                // Determine the correct amount to display for the Centre
+                // 1. Try summing up committed credits if available
+                const sumCommittedCredits = lot.credits?.reduce((acc, c) => acc + (c.credit_committed_d || 0), 0) || 0;
+                // 2. Fallback to lot_committed (from view/calculation)
+                const lotCommitted = lot.lot_committed || 0;
+                // 3. Fallback to Recognized if Committed is 0
+                const sumRecognizedCredits = lot.credits?.reduce((acc, c) => acc + (c.credit_recognized_o || 0), 0) || 0;
+                const lotRecognized = lot.lot_recognized || 0;
+                // 4. Fallback to Sum of Invoices if Recognized is 0
+                const invoices = lot.credits?.flatMap(c => c.invoices || []) || [];
+                const sumInvoices = invoices.reduce((acc, inv) => acc + Number(inv.base_amount || 0), 0);
+                // 5. Fallback to initial_amount if others are 0 (common in OFI/REC setup)
+                const initialAmount = lot.initial_amount || 0;
+
+                const displayAmount = sumCommittedCredits > 0
+                  ? sumCommittedCredits
+                  : (sumRecognizedCredits > 0
+                    ? sumRecognizedCredits
+                    : (sumInvoices > 0 ? sumInvoices : (lotCommitted > 0 ? lotCommitted : (lotRecognized > 0 ? lotRecognized : initialAmount))));
+
+
+                return (
+                  <div key={lot.id} className="bg-muted/40 px-3 py-2 rounded text-xs space-y-1">
+                    <div className="flex justify-between items-start">
+                      <span className="font-medium text-foreground">{lot.name.replace(/^Organització:\s*/, '')}</span>
+                      <span className="font-bold">{formatCurrency(displayAmount)}</span>
+                    </div>
+                    {/* Display Areas and Centers (Currently verifying from Contract level as per data model) */}
+                    {(contract.areas && contract.areas.length > 0) && (
+                      <div className="text-[10px] text-muted-foreground">
+                        <span className="font-semibold">Àrees:</span> {contract.areas.join(", ")}
+                      </div>
+                    )}
+                    {(contract.centers && contract.centers.length > 0) && (
+                      <div className="text-[10px] text-muted-foreground">
+                        <span className="font-semibold">Centres:</span> {contract.centers.join(", ")}
+                      </div>
+                    )}
+
+                    <div className="text-muted-foreground pl-1 border-l-2 border-muted-foreground/20 mt-1">
+                      {invoices.length} factures
+                      {invoices.length > 0 && invoices.length < 5 && (
+                        <div className="mt-1 flex flex-wrap gap-x-2 text-[10px]">
+                          {invoices.map(inv => (
+                            <span key={inv.id}>#{inv.invoice_number} ({formatCurrency(Number(inv.base_amount))})</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  {lot.awardee && (
-                    <div className="text-muted-foreground">
-                      <span className="font-medium">Adjudicatari:</span> {lot.awardee}
-                    </div>
-                  )}
-                  {lot.cpv_code && (
-                    <div className="text-muted-foreground">
-                      <span className="font-medium">CPV:</span> {lot.cpv_code} - {lot.cpv_description}
-                    </div>
-                  )}
-                  {(lot.start_date || lot.end_date) && (
-                    <div className="text-muted-foreground">
-                      {formatDate(lot.start_date)} - {formatDate(lot.end_date)}
-                    </div>
-                  )}
-                  <div className="flex gap-4 pt-1 border-t border-muted-foreground/20">
-                    <div>
-                      <span className="text-muted-foreground">Compromès:</span>{" "}
-                      <span className="font-semibold text-foreground">
-                        {formatCurrency(lot.lot_committed || 0)}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Reconegut:</span>{" "}
-                      <span className="font-semibold text-foreground">
-                        {formatCurrency(lot.lot_recognized || 0)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {contract.lots.length > 4 && (
-                <div className="text-center py-1">
-                  <Badge variant="secondary" className="text-xs">
-                    +{contract.lots.length - 4} lote{contract.lots.length - 4 > 1 ? 's' : ''} més
-                  </Badge>
-                </div>
+                );
+              })}
+
+              {(!contract.lots || contract.lots.length === 0) && (
+                <div className="text-xs text-muted-foreground italic">Sense centres de despesa assignats</div>
               )}
             </div>
           </div>
+        ) : (
+          contract.lots && contract.lots.length > 0 && (
+            <div className="space-y-2">
+              <div className="text-xs font-medium text-muted-foreground mb-1.5">
+                Lotes ({contract.lots.length})
+              </div>
+              <div className="space-y-1.5">
+                {contract.lots.slice(0, 4).map((lot) => (
+                  <div
+                    key={lot.id}
+                    className="bg-muted/40 px-3 py-2 rounded text-xs space-y-1"
+                  >
+                    <div className="flex justify-between items-start gap-2">
+                      <span className="font-medium text-foreground flex-1 line-clamp-1">{lot.name}</span>
+                    </div>
+                    {lot.awardee && (
+                      <div className="text-muted-foreground">
+                        <span className="font-medium">Adjudicatari:</span> {lot.awardee}
+                      </div>
+                    )}
+                    {lot.cpv_code && (
+                      <div className="text-muted-foreground">
+                        <span className="font-medium">CPV:</span> {lot.cpv_code} - {lot.cpv_description}
+                      </div>
+                    )}
+                    {(lot.start_date || lot.end_date) && (
+                      <div className="text-muted-foreground">
+                        {formatDate(lot.start_date)} - {formatDate(lot.end_date)}
+                      </div>
+                    )}
+                    <div className="flex gap-4 pt-1 border-t border-muted-foreground/20">
+                      <div>
+                        <span className="text-muted-foreground">Compromès:</span>{" "}
+                        <span className="font-semibold text-foreground">
+                          {formatCurrency(lot.lot_committed || 0)}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Reconegut:</span>{" "}
+                        <span className="font-semibold text-foreground">
+                          {formatCurrency(lot.lot_recognized || 0)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {contract.lots.length > 4 && (
+                  <div className="text-center py-1">
+                    <Badge variant="secondary" className="text-xs">
+                      +{contract.lots.length - 4} lote{contract.lots.length - 4 > 1 ? 's' : ''} més
+                    </Badge>
+                  </div>
+                )}
+              </div>
+            </div>
+          )
         )}
         <div className="mt-3 pt-3 border-t flex justify-between text-xs">
-          <div className="space-y-0.5">
-            <div>
-              <span className="text-muted-foreground">Compromès:</span>{" "}
-              <span className="font-semibold">{formatCurrency(totalCreditCommitted)}</span>
+          {['OFI', 'REC'].includes(contract.award_procedure || '') ? (
+            // Simplified metrics for OFI/REC: Only Total (Recognized)
+            <div className="w-full text-right">
+              <span className="text-muted-foreground mr-2">Total (Reconegut):</span>
+              <span className="font-bold text-lg">{formatCurrency(totalCreditRecognized)}</span>
             </div>
-            <div>
-              <span className="text-muted-foreground">Reconegut:</span>{" "}
-              <span className="font-semibold">{formatCurrency(totalCreditRecognized)}</span>
-            </div>
-          </div>
-          <div className="space-y-0.5 text-right">
-            <div>
-              <span className="text-muted-foreground">Real:</span>{" "}
-              <span className="font-semibold">{formatCurrency(totalCreditReal)}</span>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Execució:</span>{" "}
-              <span className="font-semibold">{executionPercentage.toFixed(2)}%</span>
-            </div>
-          </div>
+          ) : (
+            // Standard metrics for other contracts
+            <>
+              <div className="space-y-0.5">
+                <div>
+                  <span className="text-muted-foreground">Compromès:</span>{" "}
+                  <span className="font-semibold">{formatCurrency(totalCreditCommitted)}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Reconegut:</span>{" "}
+                  <span className="font-semibold">{formatCurrency(totalCreditRecognized)}</span>
+                </div>
+              </div>
+              <div className="space-y-0.5 text-right">
+                <div>
+                  <span className="text-muted-foreground">Real:</span>{" "}
+                  <span className="font-semibold">{formatCurrency(totalCreditReal)}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Execució:</span>{" "}
+                  <span className="font-semibold">{executionPercentage.toFixed(2)}%</span>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </CardContent>
     </Card>

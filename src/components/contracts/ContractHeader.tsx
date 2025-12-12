@@ -52,26 +52,30 @@ export function ContractHeader({ contract, onEdit, onDelete, onClose }: Contract
             <div className="p-6 space-y-6">
                 {/* Contract Details Grid */}
                 <div className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                    <div>
-                        <p className="text-muted-foreground mb-1">Número de dossier:</p>
-                        <p className="font-medium">
-                            {contract.dossier_number ? (
-                                <a
-                                    href={`https://imas.secimallorca.net/segex/expediente.aspx?id=${contract.dossier_number.slice(
-                                        0,
-                                        -1
-                                    )}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="hover:underline text-blue-600"
-                                >
-                                    {contract.dossier_number}
-                                </a>
-                            ) : (
-                                "-"
-                            )}
-                        </p>
-                    </div>
+                    {/* Conditionally hide fields for OFI/REC */}
+                    {!['OFI', 'REC'].includes(contract.award_procedure || '') && (
+                        <div>
+                            <p className="text-muted-foreground mb-1">Número de dossier:</p>
+                            <p className="font-medium">
+                                {contract.dossier_number ? (
+                                    <a
+                                        href={`https://imas.secimallorca.net/segex/expediente.aspx?id=${contract.dossier_number.slice(
+                                            0,
+                                            -1
+                                        )}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="hover:underline text-blue-600"
+                                    >
+                                        {contract.dossier_number}
+                                    </a>
+                                ) : (
+                                    "-"
+                                )}
+                            </p>
+                        </div>
+                    )}
+
                     <div>
                         <p className="text-muted-foreground mb-1">Número d'expedient:</p>
                         <p className="font-medium">
@@ -96,26 +100,38 @@ export function ContractHeader({ contract, onEdit, onDelete, onClose }: Contract
                         <p className="text-muted-foreground mb-1">Referència interna:</p>
                         <p className="font-medium">{contract.referencia_interna || "-"}</p>
                     </div>
-                    <div>
-                        <p className="text-muted-foreground mb-1">Tipus de necessitat:</p>
-                        <p className="font-medium">{contract.tipus_necessitat || "-"}</p>
-                    </div>
+
+                    {!['OFI', 'REC'].includes(contract.award_procedure || '') && (
+                        <div>
+                            <p className="text-muted-foreground mb-1">Tipus de necessitat:</p>
+                            <p className="font-medium">{contract.tipus_necessitat || "-"}</p>
+                        </div>
+                    )}
+
                     <div>
                         <p className="text-muted-foreground mb-1">Òrgan de contractació:</p>
                         <p className="font-medium">{contract.contracting_body || "-"}</p>
                     </div>
-                    <div>
-                        <p className="text-muted-foreground mb-1">Responsable de contacte:</p>
-                        <p className="font-medium">{contract.contact_responsible || "-"}</p>
-                    </div>
+
+                    {!['OFI', 'REC'].includes(contract.award_procedure || '') && (
+                        <div>
+                            <p className="text-muted-foreground mb-1">Responsable de contacte:</p>
+                            <p className="font-medium">{contract.contact_responsible || "-"}</p>
+                        </div>
+                    )}
+
                     <div>
                         <p className="text-muted-foreground mb-1">Procediment d'adjudicació:</p>
                         <p className="font-medium">{contract.award_procedure || "-"}</p>
                     </div>
-                    <div>
-                        <p className="text-muted-foreground mb-1">Tipus contractual:</p>
-                        <p className="font-medium">{contract.contract_type || "-"}</p>
-                    </div>
+
+                    {!['OFI', 'REC'].includes(contract.award_procedure || '') && (
+                        <div>
+                            <p className="text-muted-foreground mb-1">Tipus contractual:</p>
+                            <p className="font-medium">{contract.contract_type || "-"}</p>
+                        </div>
+                    )}
+
                     <div>
                         <p className="text-muted-foreground mb-1">Característiques:</p>
                         <div className="flex gap-2">
@@ -132,22 +148,27 @@ export function ContractHeader({ contract, onEdit, onDelete, onClose }: Contract
                             {!contract.extendable && !contract.modifiable && "-"}
                         </div>
                     </div>
-                    <div>
-                        <p className="text-muted-foreground mb-1">Data inici:</p>
-                        <p className="font-medium">
-                            {contract.start_date
-                                ? format(new Date(contract.start_date), "dd/MM/yyyy", { locale: ca })
-                                : "-"}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-muted-foreground mb-1">Data fi:</p>
-                        <p className="font-medium">
-                            {contract.end_date
-                                ? format(new Date(contract.end_date), "dd/MM/yyyy", { locale: ca })
-                                : "-"}
-                        </p>
-                    </div>
+
+                    {!['OFI', 'REC'].includes(contract.award_procedure || '') && (
+                        <>
+                            <div>
+                                <p className="text-muted-foreground mb-1">Data inici:</p>
+                                <p className="font-medium">
+                                    {contract.start_date
+                                        ? format(new Date(contract.start_date), "dd/MM/yyyy", { locale: ca })
+                                        : "-"}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-muted-foreground mb-1">Data fi:</p>
+                                <p className="font-medium">
+                                    {contract.end_date
+                                        ? format(new Date(contract.end_date), "dd/MM/yyyy", { locale: ca })
+                                        : "-"}
+                                </p>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 {/* Purpose */}

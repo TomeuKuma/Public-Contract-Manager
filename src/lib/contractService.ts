@@ -89,7 +89,14 @@ export const getContracts = async (filters?: ContractFilters, page = 0, pageSize
             id,
             credit_committed_d,
             credit_recognized_o,
-            any
+            any,
+            invoices(
+              id,
+              invoice_number,
+              base_amount,
+              center_id,
+              centers(name)
+            )
           )
         `)
         .in('contract_id', contractIds)
@@ -383,6 +390,97 @@ export const createContract = async (contractData: any) => {
     return { data: newContract, error: null };
   } catch (error: any) {
     console.error("Error in createContract:", error);
+    return { data: null, error: error };
+  }
+};
+
+export const createOfiRecContract = async (contractData: any) => {
+  try {
+    // 1. Create the contract using the base function
+    // contractData contains 'organizations' which is extra, but createContract will ignore it
+    // if we destructure carefully. However, createContract takes "lots" property.
+    // We should strip 'organizations' from the base data.
+    const { organizations, ...baseContractData } = contractData;
+
+    // Ensure we have the necessary fields
+    if (!['OFI', 'REC'].includes(baseContractData.award_procedure)) {
+      throw new Error("Invalid award procedure for OFI/REC contract");
+    }
+
+    const { data: newContract, error } = await createContract(baseContractData);
+    if (error) throw error;
+
+    // 2. Create Lots/Credits for each Organization
+    if (organizations && organizations.length > 0) {
+      for (const [index, org] of organizations.entries()) {
+        const lotName = `Organització: ${org.contracting_body}`;
+
+        const lotData = {
+          contract_id: newContract.id,
+          name: lotName,
+          sort_order: index,
+          // Store the specific contracting body in observations just in case
+          observations: `Organització: ${org.contracting_body}`
+        };
+
+        const { data: newLot, error: lotError } = await supabase
+          .from("lots")
+          .insert(lotData)
+          .select()
+          .single();
+
+        if (lotError) throw lotError;
+
+        // Create a default Credit for this Lot
+        const creditData = {
+          lot_id: newLot.id,
+          any: new Date().getFullYear(), // Default to current year
+          credit_committed_d: 0,
+          credit_real: 0,
+          credit_recognized_o: 0
+        };
+
+        const { error: creditError } = await supabase
+          .from("credits")
+          .insert(creditData);
+
+        if (creditError) throw creditError;
+      }
+    } else {
+      // Fallback if no organizations provided (should be prevented by frontend)
+      // Create a default single lot
+      const lotData = {
+        contract_id: newContract.id,
+        name: `Lot únic - ${baseContractData.award_procedure}`,
+        sort_order: 0
+      };
+
+      const { data: newLot, error: lotError } = await supabase
+        .from("lots")
+        .insert(lotData)
+        .select()
+        .single();
+
+      if (lotError) throw lotError;
+
+      const creditData = {
+        lot_id: newLot.id,
+        any: new Date().getFullYear(),
+        credit_committed_d: 0,
+        credit_real: 0,
+        credit_recognized_o: 0
+      };
+
+      const { error: creditError } = await supabase
+        .from("credits")
+        .insert(creditData);
+
+      if (creditError) throw creditError;
+    }
+
+    return { data: newContract, error: null };
+  } catch (error: any) {
+    console.error("Error in createOfiRecContract:", error);
     return { data: null, error: error };
   }
 };

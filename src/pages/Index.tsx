@@ -66,10 +66,19 @@ const Index = () => {
                   Dashboard de control dels expedients de despesa de l'IMAS
                 </p>
               </div>
-              <Button onClick={() => navigate("/contractes/nou")}>
-                <Plus className="mr-2 h-4 w-4" />
-                Nou Contracte
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button onClick={() => navigate("/contractes/nou")}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Nou Contracte
+                </Button>
+                <Button
+                  onClick={() => navigate("/contractes/nou-ofi-rec")}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Nou OFI/REC
+                </Button>
+              </div>
             </div>
 
             {/* Sort Selector */}
