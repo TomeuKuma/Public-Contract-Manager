@@ -1,3 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/**
+ * Bulk Upload Service
+ * 
+ * Uses 'any' for Excel/CSV row parsing where cell types are dynamic.
+ */
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -403,7 +409,7 @@ export const processUpload = async (rows: BulkUploadRow[]): Promise<UploadResult
                     contract_type: firstRow.contract_type,
                     award_procedure: firstRow.award_procedure,
                     contracting_body: firstRow.contracting_body,
-                    tipus_necessitat: firstRow.need_type,
+                    tipus_necessitat: firstRow.need_type as "Puntual" | "Recurrent" | undefined,
                     purpose: firstRow.object_description,
                     need_to_satisfy: firstRow.need_to_satisfy,
                     observations: firstRow.observations,

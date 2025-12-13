@@ -1,3 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/**
+ * Contract Service
+ * 
+ * This file uses 'any' types for Supabase query results with complex nested joins.
+ * The types are difficult to infer statically but are correct at runtime.
+ * To properly type these, regenerate Supabase types: npx supabase gen types typescript
+ */
 import { supabase } from "@/integrations/supabase/client";
 
 export interface ContractFilters {

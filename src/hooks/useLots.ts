@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import { Lot } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 
@@ -13,7 +14,7 @@ export function useLots() {
         try {
             const { data, error } = await supabase
                 .from("lots")
-                .insert(lotData as any)
+                .insert(lotData as TablesInsert<'lots'>)
                 .select()
                 .single();
 
@@ -23,8 +24,8 @@ export function useLots() {
                 description: "Lot creat correctament",
             });
             return data;
-        } catch (err: any) {
-            setError(err);
+        } catch (err) {
+            setError(err instanceof Error ? err : new Error(String(err)));
             toast({
                 title: "Error",
                 description: "No s'ha pogut crear el lot",
@@ -52,8 +53,8 @@ export function useLots() {
                 description: "Lot actualitzat correctament",
             });
             return data;
-        } catch (err: any) {
-            setError(err);
+        } catch (err) {
+            setError(err instanceof Error ? err : new Error(String(err)));
             toast({
                 title: "Error",
                 description: "No s'ha pogut actualitzar el lot",
@@ -74,8 +75,8 @@ export function useLots() {
                 title: "Èxit",
                 description: "Lot eliminat correctament",
             });
-        } catch (err: any) {
-            setError(err);
+        } catch (err) {
+            setError(err instanceof Error ? err : new Error(String(err)));
             toast({
                 title: "Error",
                 description: "No s'ha pogut eliminar el lot",

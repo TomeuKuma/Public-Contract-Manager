@@ -1,3 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/**
+ * PDF Extraction Service
+ * 
+ * Uses 'any' for PDF.js text content items and Gemini AI model interactions.
+ */
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as pdfjsLib from 'pdfjs-dist';
 

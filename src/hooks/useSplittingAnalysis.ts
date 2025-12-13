@@ -25,6 +25,20 @@ export interface SplittingAnalysisResult {
     };
 }
 
+// Interface for the Supabase query result
+interface CreditAnalysisRow {
+    credit_committed_d: number | null;
+    any: number;
+    lot?: {
+        formalization_date?: string | null;
+        cpv_codes?: { code: string } | null;
+        contract?: {
+            contracting_body?: string;
+            tipus_necessitat?: string;
+        } | null;
+    };
+}
+
 export const useSplittingAnalysis = (filters: SplittingFiltersState, enabled: boolean) => {
     return useQuery({
         queryKey: ["splitting-analysis", filters],
@@ -39,7 +53,7 @@ export const useSplittingAnalysis = (filters: SplittingFiltersState, enabled: bo
 
             // Build the select string
             // We need to join with cpv_codes to get the real code
-            let selectString = `
+            const selectString = `
               credit_committed_d,
               any,
               lot:lots!inner (
@@ -56,7 +70,7 @@ export const useSplittingAnalysis = (filters: SplittingFiltersState, enabled: bo
 
             // Fetch broader data (last 5 years) to debug what's available
             // Note: We fetch based on 'any' (budget year) for initial scope, but filtering will be on formalization_date
-            let query = supabase
+            const query = supabase
                 .from("credits")
                 .select(selectString)
                 .gte("any", queryYear - 5);
@@ -92,7 +106,7 @@ export const useSplittingAnalysis = (filters: SplittingFiltersState, enabled: bo
             // 1. Get code (e.g. "90910000-9")
             // 2. Remove non-digits ("909100009") -> actually usually just first 8 are relevant
             // Let's take the first 8 digits if available
-            let cleanFilterCPV = filters.cpv?.code.replace(/\D/g, '').substring(0, 8) || "";
+            const cleanFilterCPV = filters.cpv?.code.replace(/\D/g, '').substring(0, 8) || "";
             // 3. Remove trailing zeros to get the "significant prefix" (e.g. "90910000" -> "9091")
             // This allows "90910000" to match "90911200"
             let filterPrefix = cleanFilterCPV.replace(/0+$/, "");
@@ -111,7 +125,7 @@ export const useSplittingAnalysis = (filters: SplittingFiltersState, enabled: bo
                 aggregation[body] = 0;
             });
 
-            data.forEach((item: any) => {
+            (data as CreditAnalysisRow[]).forEach((item) => {
                 const itemFormalizationDate = item.lot?.formalization_date ? new Date(item.lot.formalization_date) : null;
 
                 // Access nested CPV code from relation

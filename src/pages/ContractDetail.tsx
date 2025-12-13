@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -36,13 +36,7 @@ const ContractDetail = () => {
   // but is returned by the fetch logic. We can extend the state or keep it separate.
   const [availableCenters, setAvailableCenters] = useState<{ id: string; name: string }[]>([]);
 
-  useEffect(() => {
-    if (id) {
-      fetchContractDetail();
-    }
-  }, [id, filters]);
-
-  const fetchContractDetail = async () => {
+  const fetchContractDetail = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await getContractById(id!, filters);
@@ -63,7 +57,13 @@ const ContractDetail = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, filters, toast]);
+
+  useEffect(() => {
+    if (id) {
+      fetchContractDetail();
+    }
+  }, [id, fetchContractDetail]);
 
   const handleDelete = async () => {
     if (!confirm("Estàs segur que vols eliminar aquest contracte?")) return;

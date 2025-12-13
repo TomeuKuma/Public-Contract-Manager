@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import type { User } from "@supabase/supabase-js";
 import Header from "@/components/Header";
 import FiltersSidebar from "@/components/FiltersSidebar";
 import ContractCard from "@/components/ContractCard";
@@ -16,7 +17,7 @@ const Index = () => {
   const { filters } = useFilters();
   const [sortOption, setSortOption] = useState<SortOption | null>(null);
   const { contracts, loading, loadMore, totalCount } = useContracts(filters, sortOption);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {

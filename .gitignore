@@ -31,3 +31,6 @@ dist-ssr
 
 # Backup Data
 backup_data/
+
+# Legacy scripts with sensitive data
+scripts/legacy/

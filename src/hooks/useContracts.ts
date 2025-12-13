@@ -1,9 +1,9 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { getContracts, createContract as createContractService, deleteContract as deleteContractService, ContractSort } from "@/lib/contractService";
+import { getContracts, createContract as createContractService, deleteContract as deleteContractService, ContractSort, ContractFilters } from "@/lib/contractService";
 import { Contract } from "@/types";
 
-export function useContracts(filters?: any, sort?: ContractSort) {
+export function useContracts(filters?: ContractFilters, sort?: ContractSort) {
     const { toast } = useToast();
     const queryClient = useQueryClient();
 
@@ -19,7 +19,7 @@ export function useContracts(filters?: any, sort?: ContractSort) {
     } = useInfiniteQuery({
         queryKey: ['contracts', filters, sort],
         queryFn: async ({ pageParam = 0, queryKey }) => {
-            const currentFilters = queryKey[1] as any;
+            const currentFilters = queryKey[1] as ContractFilters | undefined;
             const currentSort = queryKey[2] as ContractSort | undefined;
             const { data, count, error } = await getContracts(currentFilters, pageParam, 50, currentSort);
             if (error) throw new Error(error);
@@ -42,7 +42,7 @@ export function useContracts(filters?: any, sort?: ContractSort) {
                 description: "Contracte creat correctament",
             });
         },
-        onError: (err: any) => {
+        onError: () => {
             toast({
                 title: "Error",
                 description: "No s'ha pogut crear el contracte",
@@ -60,7 +60,7 @@ export function useContracts(filters?: any, sort?: ContractSort) {
                 description: "Contracte eliminat correctament",
             });
         },
-        onError: (err: any) => {
+        onError: () => {
             toast({
                 title: "Error",
                 description: "No s'ha pogut eliminar el contracte",

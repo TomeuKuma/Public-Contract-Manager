@@ -42,3 +42,7 @@ export const CPV_DEPTH_COLORS = {
     4: "bg-orange-100 text-orange-800",
     5: "bg-gray-100 text-gray-800",
 } as const;
+
+export const OFI_REC_OPTIONS = ["OFI", "REC"] as const;
+
+export const NEED_TYPES = ["Puntual", "Recurrent"] as const;

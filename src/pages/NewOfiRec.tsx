@@ -23,27 +23,8 @@ import {
     DialogTitle,
     DialogFooter,
 } from "@/components/ui/dialog";
-
-const CONTRACTING_BODY_OPTIONS = [
-    "UFAG Residència Llar dels Ancians",
-    "UFAG Residència La Bonanova",
-    "UFAG Residència Bartomeu Quetglas",
-    "UFAG Residència Huialfàs",
-    "UFAG Residència Oms-Sant Miquel",
-    "UFAG Residència Miquel Mir",
-    "UFAG Residència Sant Josep",
-    "UFAG Residència Son Caulelles",
-    "UFAG Direcció de les llars del menor",
-    "UFAG Coordinació dels centres d'inclusió social",
-    "Presidència",
-    "Vicepresidència",
-    "Gerència",
-];
-
-const OFI_REC_OPTIONS = [
-    "OFI",
-    "REC",
-];
+import { CONTRACTING_BODIES, OFI_REC_OPTIONS } from "@/lib/constants";
+import type { Area, Center } from "@/types";
 
 interface Organization {
     id: string; // Temporary ID for UI key
@@ -58,8 +39,8 @@ const NewOfiRec = () => {
     const [loading, setLoading] = useState(false);
 
     // Global Reference Data
-    const [areas, setAreas] = useState<any[]>([]);
-    const [centers, setCenters] = useState<any[]>([]);
+    const [areas, setAreas] = useState<Area[]>([]);
+    const [centers, setCenters] = useState<Center[]>([]);
 
     // Form State
     const [duplicateFileNumberError, setDuplicateFileNumberError] = useState(false);
@@ -377,7 +358,7 @@ const NewOfiRec = () => {
                                             <SelectValue placeholder="Selecciona..." />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {CONTRACTING_BODY_OPTIONS.map((option) => (
+                                            {CONTRACTING_BODIES.map((option) => (
                                                 <SelectItem key={option} value={option}>
                                                     {option}
                                                 </SelectItem>

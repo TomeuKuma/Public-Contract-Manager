@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import { Credit } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 
@@ -13,7 +14,7 @@ export function useCredits() {
         try {
             const { data, error } = await supabase
                 .from("credits")
-                .insert(creditData as any)
+                .insert(creditData as TablesInsert<'credits'>)
                 .select()
                 .single();
 
@@ -23,8 +24,8 @@ export function useCredits() {
                 description: "Crèdit creat correctament",
             });
             return data;
-        } catch (err: any) {
-            setError(err);
+        } catch (err) {
+            setError(err instanceof Error ? err : new Error(String(err)));
             toast({
                 title: "Error",
                 description: "No s'ha pogut crear el crèdit",
@@ -52,8 +53,8 @@ export function useCredits() {
                 description: "Crèdit actualitzat correctament",
             });
             return data;
-        } catch (err: any) {
-            setError(err);
+        } catch (err) {
+            setError(err instanceof Error ? err : new Error(String(err)));
             toast({
                 title: "Error",
                 description: "No s'ha pogut actualitzar el crèdit",
@@ -74,8 +75,8 @@ export function useCredits() {
                 title: "Èxit",
                 description: "Crèdit eliminat correctament",
             });
-        } catch (err: any) {
-            setError(err);
+        } catch (err) {
+            setError(err instanceof Error ? err : new Error(String(err)));
             toast({
                 title: "Error",
                 description: "No s'ha pogut eliminar el crèdit",

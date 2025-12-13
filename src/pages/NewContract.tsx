@@ -19,45 +19,15 @@ import {
 import { ArrowLeft, Loader2, FileText } from "lucide-react";
 import { PDFExtractionModal } from "@/components/forms/PDFExtractionModal";
 import type { MappedContractData } from "@/hooks/useCatalogMapping";
-
-
-
-
-const CONTRACTING_BODY_OPTIONS = [
-  "UFAG Residència Llar dels Ancians",
-  "UFAG Residència La Bonanova",
-  "UFAG Residència Bartomeu Quetglas",
-  "UFAG Residència Huialfàs",
-  "UFAG Residència Oms-Sant Miquel",
-  "UFAG Residència Miquel Mir",
-  "UFAG Residència Sant Josep",
-  "UFAG Residència Son Caulelles",
-  "UFAG Direcció de les llars del menor",
-  "UFAG Coordinació dels centres d'inclusió social",
-  "Presidència",
-  "Vicepresidència",
-  "Gerència",
-];
-
-const AWARD_PROCEDURE_OPTIONS = [
-  "Contracte obert",
-  "Contracte menor AD",
-  "Contracte menor ADO",
-];
-
-const CONTRACT_TYPE_OPTIONS = [
-  "Subministrament",
-  "Servei",
-  "Obra",
-  "Concessió",
-];
+import { CONTRACTING_BODIES, AWARD_PROCEDURES, CONTRACT_TYPES } from "@/lib/constants";
+import type { Area, Center } from "@/types";
 
 const NewContract = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [areas, setAreas] = useState<any[]>([]);
-  const [centers, setCenters] = useState<any[]>([]);
+  const [areas, setAreas] = useState<Area[]>([]);
+  const [centers, setCenters] = useState<Center[]>([]);
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
 
   const [selectedCenters, setSelectedCenters] = useState<string[]>([]);
@@ -429,7 +399,7 @@ const NewContract = () => {
                       <SelectValue placeholder="Selecciona..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {CONTRACTING_BODY_OPTIONS.map((option) => (
+                      {CONTRACTING_BODIES.map((option) => (
                         <SelectItem key={option} value={option}>
                           {option}
                         </SelectItem>
@@ -470,7 +440,7 @@ const NewContract = () => {
                       <SelectValue placeholder="Selecciona..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {AWARD_PROCEDURE_OPTIONS.map((option) => (
+                      {AWARD_PROCEDURES.map((option) => (
                         <SelectItem key={option} value={option}>
                           {option}
                         </SelectItem>
@@ -491,7 +461,7 @@ const NewContract = () => {
                       <SelectValue placeholder="Selecciona..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {CONTRACT_TYPE_OPTIONS.map((option) => (
+                      {CONTRACT_TYPES.map((option) => (
                         <SelectItem key={option} value={option}>
                           {option}
                         </SelectItem>

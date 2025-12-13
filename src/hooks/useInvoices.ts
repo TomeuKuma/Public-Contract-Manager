@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import { Invoice } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 
@@ -13,7 +14,7 @@ export function useInvoices() {
         try {
             const { data, error } = await supabase
                 .from("invoices")
-                .insert(invoiceData as any)
+                .insert(invoiceData as TablesInsert<'invoices'>)
                 .select()
                 .single();
 
@@ -23,8 +24,8 @@ export function useInvoices() {
                 description: "Factura creada correctament",
             });
             return data;
-        } catch (err: any) {
-            setError(err);
+        } catch (err) {
+            setError(err instanceof Error ? err : new Error(String(err)));
             toast({
                 title: "Error",
                 description: "No s'ha pogut crear la factura",
@@ -52,8 +53,8 @@ export function useInvoices() {
                 description: "Factura actualitzada correctament",
             });
             return data;
-        } catch (err: any) {
-            setError(err);
+        } catch (err) {
+            setError(err instanceof Error ? err : new Error(String(err)));
             toast({
                 title: "Error",
                 description: "No s'ha pogut actualitzar la factura",
@@ -74,8 +75,8 @@ export function useInvoices() {
                 title: "Èxit",
                 description: "Factura eliminada correctament",
             });
-        } catch (err: any) {
-            setError(err);
+        } catch (err) {
+            setError(err instanceof Error ? err : new Error(String(err)));
             toast({
                 title: "Error",
                 description: "No s'ha pogut eliminar la factura",

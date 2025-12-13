@@ -74,9 +74,9 @@ export interface Invoice {
     cpv_code_id?: string | null;
 }
 
-export interface Area extends Tables<'areas'> { }
+export type Area = Tables<'areas'>;
 
-export interface Center extends Tables<'centers'> { }
+export type Center = Tables<'centers'>;
 
 export interface ContractFilters {
     search: string;
